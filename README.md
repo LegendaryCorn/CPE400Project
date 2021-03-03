@@ -1,2 +1,2 @@
 # CPE400Project
-Project for CPE 400.
+Project for the networking class CPE 400.
