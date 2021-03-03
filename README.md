@@ -1,2 +1,2 @@
 # CPE400Project
-Project for the networking class CPE 400.
+Project for UNR's networking class CPE 400.
