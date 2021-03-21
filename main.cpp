@@ -2,6 +2,7 @@
 // Crystal Atoz, Korben DiArcangel, Joshua Insorio
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 #include "node.h"
@@ -10,36 +11,82 @@ using namespace std;
 
 void createLink(map<string,node*> nodeList, string nodeA, string nodeB, int weight);
 
-int main()
+int main(int argc, char *argv[])
 {
+	//----------------------------
+	// Test for Appropriate Input
+	//----------------------------
+	
+	if(argc != 2){
+		cout << "Please name the input file in the command line." << endl;
+		return 0;
+	}	
+	
+	
+	
+	//----------------------------
+	// Initialization
+	//----------------------------
 	map<string,node*> nodeList;
+	ifstream infile;
+	string line;
+	string mode = "";
+	
+	infile.open(argv[1]);
 	
 	
 	//----------------------------
-	// Initialize Nodes
+	// MAIN LOOP
 	//----------------------------
-    nodeList["California"] = new node("California");
-    nodeList["Nevada"] = new node("Nevada");
-    nodeList["Colorado"] = new node("Colorado");
-    nodeList["Arizona"] = new node("Arizona");
-    nodeList["New Mexico"] = new node("New Mexico");
-    nodeList["Utah"] = new node("Utah");
-    nodeList["Idaho"] = new node("Idaho");
-    nodeList["Oregon"] = new node("Oregon");
-    
-    //----------------------------
-	// Initialize Links
-	//----------------------------
-    createLink(nodeList, "California","Nevada",5);
-    createLink(nodeList, "Utah","Nevada",10);
-    createLink(nodeList, "New Mexico","Idaho",4);
-    createLink(nodeList, "Arizona","Colorado",7);
-    createLink(nodeList, "Oregon","California",6);
-    createLink(nodeList, "Nevada","Idaho",2);
-    createLink(nodeList, "Arizona","New Mexico",8);
-    createLink(nodeList, "Oregon","Utah",12);
-    createLink(nodeList, "Colorado","California",2);
-    createLink(nodeList, "Nevada","New Mexico",6);
+	
+	while(getline(infile, line))
+	{
+		
+		// Ignore the line
+		if(line.empty() || line[0] == '%')
+		{
+			// Do nothing
+		}
+		
+		// Change modes
+		else if(line[0] == '.')
+		{
+			mode = line;
+		}
+		
+		// Standard Case
+		else
+		{
+			
+			//----------------------------
+			// Initialize Nodes
+			//----------------------------
+			
+			if(mode == ".begin.inodes")
+			{
+				nodeList[line] = new node(line);
+			}
+			
+			
+			//----------------------------
+			// Initialize Links
+			//----------------------------
+			
+			else if(mode == ".begin.ilinks")
+			{
+				size_t firstComma = line.find(",",0);
+				size_t secondComma = line.find(",",firstComma+2);
+
+				createLink(nodeList, line.substr(0,firstComma), line.substr(firstComma+1,secondComma-firstComma-1),stoi(line.substr(secondComma+1,line.size())));
+			}
+			
+			
+			else
+			{
+				// Do nothing
+			}
+		}
+	}
 	
 	//----------------------------
 	// Testing the Nodes (Should be removed later)
