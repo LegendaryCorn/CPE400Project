@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -21,11 +22,17 @@ class node
         bool getStatus();
         int getWeight();
         string getName();
+        int getFailureChance();
+
+        void nodeStatus();
+        bool isNodeActive();
 
     private:
         int data;
         bool status;
         string name;
+        int failureChance;
+        bool nodeIsActive;
         map<string,node*> neighbors;
         map<string,int> neighborsWeights;
 };
@@ -138,7 +145,49 @@ string node::getName()
     return name;
 }
 
+//-----------------------------------------------------------------------------
+//
+// Gets chance of failure 
+//
+// Returns chance of failure
+//
+//-----------------------------------------------------------------------------
 
+int node::getFailureChance()
+{
+    return failureChance;
+}
 
+//-----------------------------------------------------------------------------
+//
+// Returns if node is active or not
+//
+//-----------------------------------------------------------------------------
+
+bool node::isNodeActive()
+{
+    return nodeIsActive;
+}
+
+//-----------------------------------------------------------------------------
+//
+// Checks if node failed based on chance of failure
+//
+//-----------------------------------------------------------------------------
+
+void node::nodeStatus() 
+{
+    int randNum = 0; 
+    randNum = rand() % 101; 
+
+    if(failureChance <= randNum){
+        nodeIsActive = true;
+        cout << "The node: " + name + "is ACTIVE";
+    }else{
+        nodeIsActive = false; 
+        // Maybe delete node altogether or set it to NULL?
+        cout << "The node: " + name + "has FAILED";
+    }
+}
 
 #endif
