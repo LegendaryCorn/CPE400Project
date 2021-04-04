@@ -5,41 +5,41 @@
 % Put in comments by putting a % in the beginning of the line; the program
 % will ignore these lines.
 %
-% DO NOT change any .begin or .end lines. These signify the beginning and
-% the end of what the program should do.
+% All commands must be in this format: 
+% $time command parameters
 %
-% Blank lines will also be ignored.
+% For example, to add node "Nevada" at time 2,
+% $2 createnode Nevada
+%
+% Commands must be in chronological order.
+%
+% Any other lines will be ignored.
 %
 
 % Initialize Nodes (just enter the name of the node)
 
-.begin.inodes
-
-California
-Nevada
-Colorado
-Arizona
-New Mexico
-Utah
-Idaho
-Oregon
-
-.end.inodes
+$0 createnode California
+$0 createnode Nevada
+$0 createnode Colorado
+$0 createnode Arizona
+$0 createnode New_Mexico
+$0 createnode Utah
+$0 createnode Idaho
+$0 createnode Oregon
     
-% Initialize Links (NodeA,NodeB,Weight(int))
-% No spaces between the commas!
+% Initialize Links (NodeA NodeB Weight(int))
 
-.begin.ilinks
+$0 createlink California Nevada 5
+$0 createlink Utah Nevada 10
+$0 createlink New_Mexico Idaho 4
+$0 createlink Arizona Colorado 7
+$0 createlink Oregon California 6
+$0 createlink Nevada Idaho 2
+$0 createlink Arizona New_Mexico 8
+$0 createlink Oregon Utah 12
+$0 createlink Colorado California 2
+$0 createlink Nevada New_Mexico 6
 
-California,Nevada,5
-Utah,Nevada,10
-New Mexico,Idaho,4
-Arizona,Colorado,7
-Oregon,California,6
-Nevada,Idaho,2
-Arizona,New Mexico,8
-Oregon,Utah,12
-Colorado,California,2
-Nevada,New Mexico,6
+% Past initialization
+$12 createnode Washington
 
-.end.ilinks
