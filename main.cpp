@@ -9,6 +9,7 @@
 #include <map>
 #include <time.h>
 #include <stdlib.h>
+#include <climits>
 #include "node.h"
 
 using namespace std;
@@ -26,6 +27,14 @@ bool createLink(string parameters);
 bool seeNodes();
 bool seeLinks();
 bool stopLoop();
+
+// Pathing Algorithm
+void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB);
+void printSolution(map<string, int> dist, vector<string> path, string nodeA);
+
+string minDistance(map<string, int> dist, map<string, bool> set);
+
+
 
 
 // Global Variables
@@ -54,11 +63,13 @@ int main(int argc, char *argv[])
     iterationL.join();
     inputL.join();
 
+    optimalPath(nodeList, "California", "Idaho");
+
 	//----------------------------
 	// Deleting the Nodes
 	//----------------------------
 	for(map<string,node*>::iterator i = nodeList.begin(); i != nodeList.end(); i++){
-		delete i->second;
+        delete i->second;
 	}
 
     return 0;
@@ -140,6 +151,14 @@ void inputLoop()
 
     while(!shouldStop)
     {
+        //----------------------------
+        // UI for User Interaction          //Should be fine in the final when user is prompted first
+        //----------------------------
+        cout << endl <<  "------------Commands-------------" << endl;
+        cout << "| Options:\t\t\t|\n| \t-seenodes\t\t|\n| \t-seelinks\t\t|\n| \t-stop\t\t\t|" << endl;
+        cout << "---------------------------------" << endl;
+        cout << "> ";
+
         mtx.unlock();
 
         // Get input
@@ -282,6 +301,7 @@ bool createLink(string parameters)
 
 bool seeNodes()
 {
+    cout << endl << "Nodes: " << endl;
     for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
         cout << a->first << endl;
 	}
@@ -301,8 +321,9 @@ bool seeNodes()
 
 bool seeLinks()
 {
+    cout << endl << "Links: " << endl;
 	for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
-		for(map<string,node*>::iterator b = a; b != nodeList.end(); b++){
+		for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
 			if(a->second->getLinkStatus(b->first) >= 0)
 			{
 				cout << a->first << " - " << b->first << " " << a->second->getLinkStatus(b->first) << endl;
@@ -327,4 +348,117 @@ bool stopLoop()
 {
     shouldStop = true;
     return shouldStop;
+}
+
+//-----------------------------------------------------------------------------
+//
+// bool stopLoop
+//
+// Iterates through the links of nodeList using Dijkstra's algorithm
+//
+// inputs:
+//    nodeList: A copy of the entire nodeList
+//    nodeA: Name of the source node
+//    nodeB: Name of the destination node
+//
+//-----------------------------------------------------------------------------
+
+void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
+{
+    vector<string> path;
+    map<string, int> dist;
+    map<string, bool> set;
+
+    //Initialize dist map with active nodes only
+    for(map<string,node*>::iterator i = nodeList.begin(); i != nodeList.end(); i++){
+        if(i->second->isNodeActive())
+        {
+            dist[i->first] = INT_MAX;
+            set[i->first] = false;
+        }
+    }
+
+    //Initialize nodeA as the start of the path
+    path.push_back(nodeA);
+
+    //Distance from Source node
+    dist[nodeA] = 0;
+
+    for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
+    {
+        // Pick the minimum distance vertex from the set of vertices not yet 
+        //  processed. u is always equal to src in first iteration.
+        string u = minDistance(dist, set);
+
+        // Mark the picked vertex as processed
+        set[u] = true;
+
+        // Update dist value of the adjacent vertices of the picked vertex.
+        for (map<string, int>::iterator v = dist.begin(); v != dist.end(); v++)
+
+            // Update dist[v] only if is not in sptSet, there is an edge 
+            //  from u to v, and  total weight of path from src to v 
+            //  through u is smaller than current value of dist[v]
+            if (!set[v->first] && (nodeList[u]->getLinkStatus(v->first) >= 0) && dist[u] + (nodeList[u]->getLinkStatus(v->first)) < dist[v->first])
+            {
+                path.push_back(u);
+                dist[v->first] = dist[u] + (nodeList[u]->getLinkStatus(v->first));
+            } 
+    }
+
+    printSolution(dist, path, nodeA);
+}
+
+
+//-----------------------------------------------------------------------------
+//
+// int minDistance
+//
+// A utility function to find the vertex with minimum distance value, 
+//  from the set of vertices not yet included in shortest path tree
+//
+// inputs:
+//    dist: A copy of the entire dist map
+//    set: A copy of the entire set map
+//
+//-----------------------------------------------------------------------------
+
+string minDistance(map<string, int> dist, map<string, bool> set)
+{
+    // Initialize min value
+    int min = INT_MAX; 
+    string min_index = "";
+  
+    for (map<string, int>::iterator i = dist.begin(); i != dist.end(); i++){
+        if (set[i->first] == false && dist[i->first] <= min)
+        {
+            min = dist[i->first];
+            min_index = i->first;
+        }
+    }
+  
+    return min_index;
+}
+
+//-----------------------------------------------------------------------------
+//
+// void printSolution
+//
+// Function to print shortest path from source to j using parent array
+//
+// inputs:
+//    dist: A copy of the entire dist map
+//    path: A copy of the entire set map
+//
+//-----------------------------------------------------------------------------
+
+void printSolution(map<string, int> dist, vector<string> path, string nodeA)
+{
+    printf("Vertex\t Distance\tPath");
+    for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
+    {
+
+        cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << nodeA;
+        //printPath(parent, i);
+    }
 }
