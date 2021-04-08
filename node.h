@@ -17,7 +17,7 @@ class node
         node(int ndata, string nname);
 
         void setLink(string nname, node* npointer, int nweight);
-        
+
         int getLinkStatus(string nname);
         bool getStatus();
         int getWeight();
@@ -109,7 +109,7 @@ int node::getLinkStatus(string nname)
 	{
 		return -2;
 	}
-	
+
 	return neighborsWeights[nname];
 }
 
@@ -147,7 +147,7 @@ string node::getName()
 
 //-----------------------------------------------------------------------------
 //
-// Gets chance of failure 
+// Gets chance of failure
 //
 // Returns chance of failure
 //
@@ -166,7 +166,7 @@ int node::getFailureChance()
 
 bool node::isNodeActive()
 {
-    return nodeIsActive;
+    return status;
 }
 
 //-----------------------------------------------------------------------------
@@ -175,16 +175,16 @@ bool node::isNodeActive()
 //
 //-----------------------------------------------------------------------------
 
-void node::nodeStatus() 
+void node::nodeStatus()
 {
-    int randNum = 0; 
-    randNum = rand() % 101; 
+    int randNum = 0;
+    randNum = rand() % 101;
 
     if(failureChance <= randNum){
         nodeIsActive = true;
         cout << "The node: " + name + "is ACTIVE";
     }else{
-        nodeIsActive = false; 
+        nodeIsActive = false;
         // Maybe delete node altogether or set it to NULL?
         cout << "The node: " + name + "has FAILED";
     }
