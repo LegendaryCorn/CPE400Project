@@ -26,6 +26,7 @@ $0 createnode New_Mexico
 $0 createnode Utah
 $0 createnode Idaho
 $0 createnode Oregon
+$0 createnode Wyoming
     
 % Initialize Links (NodeA NodeB Weight(int))
 
@@ -39,6 +40,8 @@ $0 createlink Arizona New_Mexico 8
 $0 createlink Oregon Utah 12
 $0 createlink Colorado California 2
 $0 createlink Nevada New_Mexico 6
+$0 createlink California Wyoming 1
+$0 createlink Wyoming Nevada 1
 
 % Past initialization
 $12 createnode Washington

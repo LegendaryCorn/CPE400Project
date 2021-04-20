@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <stdlib.h>
+#include "link.h"
 
 using namespace std;
 
@@ -16,7 +17,7 @@ class node
         node(string nname);
         node(int ndata, string nname);
 
-        void setLink(string nname, node* npointer, int nweight);
+        void setLink(link* l);
 
         int getLinkStatus(string nname);
         bool getStatus();
@@ -33,8 +34,7 @@ class node
         string name;
         int failureChance;
         bool nodeIsActive;
-        map<string,node*> neighbors;
-        map<string,int> neighborsWeights;
+        map<string,link*> neighborLinks;
 };
 
 //-----------------------------------------------------------------------------
@@ -77,10 +77,9 @@ node::node(int ndata, string nname)
 //
 //-----------------------------------------------------------------------------
 
-void node::setLink(string nname, node* npointer, int nweight)
+void node::setLink(link* l)
 {
-	neighbors[nname] = npointer;
-	neighborsWeights[nname] = nweight;
+	neighborLinks[l->getOppositeNode(name)] = l;
 }
 
 //-----------------------------------------------------------------------------
@@ -101,16 +100,16 @@ void node::setLink(string nname, node* npointer, int nweight)
 //-----------------------------------------------------------------------------
 int node::getLinkStatus(string nname)
 {
-	if(neighbors.find(nname) == neighbors.end())
+	if(neighborLinks.find(nname) == neighborLinks.end())
 	{
 		return -1;
 	}
-	if(!neighbors[nname]->getStatus())
+	if(!neighborLinks[nname]->getIsActive())
 	{
 		return -2;
 	}
 
-	return neighborsWeights[nname];
+	return neighborLinks[nname]->getWeight();
 }
 
 //-----------------------------------------------------------------------------

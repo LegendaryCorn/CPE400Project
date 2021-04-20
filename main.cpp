@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <climits>
 #include "node.h"
+#include "link.h"
 
 using namespace std;
 
@@ -41,6 +42,7 @@ string minDistance(map<string, int> dist, map<string, bool> set);
 mutex mtx; // Mutex lock, YOU SHOULD ONLY MODIFY THE VARIABLES BELOW WHILE IN THIS LOCK.
 bool shouldStop = false; //Determines if the loops should stop
 map<string,node*> nodeList; //List of nodes
+vector<link*> linkList; //List of links
 
 int main(int argc, char *argv[])
 {
@@ -70,6 +72,13 @@ int main(int argc, char *argv[])
 	//----------------------------
 	for(map<string,node*>::iterator i = nodeList.begin(); i != nodeList.end(); i++){
         delete i->second;
+	}
+
+    //----------------------------
+	// Deleting the Links
+	//----------------------------
+	for(int i = 0; i < linkList.size(); i++){
+        delete linkList[i];
 	}
 
     return 0;
@@ -282,8 +291,10 @@ bool createLink(string parameters)
 	}
 
 	// Forming the link
-	nodeList[nodeA]->setLink(nodeB,nodeList[nodeB],weight);
-	nodeList[nodeB]->setLink(nodeA,nodeList[nodeA],weight);
+    linkList.push_back(new link(nodeA, nodeB, weight));
+
+	nodeList[nodeA]->setLink(linkList[linkList.size()-1]);
+	nodeList[nodeB]->setLink(linkList[linkList.size()-1]);
 	cout << "Link created: " << nodeA << " - " << nodeB << " with weight " << weight << endl;
 	return true;
 }
@@ -387,7 +398,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
 
     for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
     {
-        // Pick the minimum distance vertex from the set of vertices not yet 
+        // Pick the minimum distance vertex from the set of vertices not yet
         //  processed. u is always equal to src in first iteration.
         string u = minDistance(dist, set);
 
@@ -397,8 +408,8 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
         // Update dist value of the adjacent vertices of the picked vertex.
         for (map<string, int>::iterator v = dist.begin(); v != dist.end(); v++)
 
-            // Update dist[v] only if is not in sptSet, there is an edge 
-            //  from u to v, and  total weight of path from src to v 
+            // Update dist[v] only if is not in sptSet, there is an edge
+            //  from u to v, and  total weight of path from src to v
             //  through u is smaller than current value of dist[v]
             if (!set[v->first] && (nodeList[u]->getLinkStatus(v->first) >= 0) && dist[u] + (nodeList[u]->getLinkStatus(v->first)) < dist[v->first])
             {
@@ -408,7 +419,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
                 }
                 //cout << v->first << " " << dist[u] + (nodeList[u]->getLinkStatus(v->first)) <<  "-------" << u << "------" << v->first << endl;
                 dist[v->first] = dist[u] + (nodeList[u]->getLinkStatus(v->first));
-            } 
+            }
     }
     path[nodeB].push_back(nodeB);
 
@@ -420,7 +431,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
 //
 // int minDistance
 //
-// A utility function to find the vertex with minimum distance value, 
+// A utility function to find the vertex with minimum distance value,
 //  from the set of vertices not yet included in shortest path tree
 //
 // inputs:
@@ -432,9 +443,9 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
 string minDistance(map<string, int> dist, map<string, bool> set)
 {
     // Initialize min value
-    int min = INT_MAX; 
+    int min = INT_MAX;
     string min_index = "";
-  
+
     for (map<string, int>::iterator i = dist.begin(); i != dist.end(); i++){
         if (set[i->first] == false && dist[i->first] <= min)
         {
@@ -442,7 +453,7 @@ string minDistance(map<string, int> dist, map<string, bool> set)
             min_index = i->first;
         }
     }
-  
+
     return min_index;
 }
 
