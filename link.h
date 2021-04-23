@@ -18,12 +18,16 @@ class link
 
         bool getIsActive();
         int getWeight();
+        int getFailureChance(); 
+        int linkfailureChance();
+        bool getStatus();
 
     private:
         string node1;
         string node2;
         bool isActive;
         int weight;
+        bool status;
 };
 
 link::link(string n1, string n2, int w)
@@ -50,5 +54,28 @@ int link::getWeight()
 {
     return weight;
 }
+
+bool node::getStatus()
+{
+    return status;
+}
+
+int node::getFailureChance()
+{
+    return failureChance;
+}
+
+void link::linkFailureChance()
+{
+    int randNum = 0;
+    randNum = rand() % 101;
+
+    if(failureChance <= randNum){
+        status = true;
+        cout << "The link: " + name + "is ACTIVE";
+    }else{
+        status = false;
+        cout << "The link: " + name + "has FAILED";
+    }
 
 #endif

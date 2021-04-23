@@ -25,7 +25,7 @@ class node
         string getName();
         int getFailureChance();
 
-        void nodeStatus();
+        void nodeFailureChance();
         bool isNodeActive();
 
     private:
@@ -170,23 +170,25 @@ bool node::isNodeActive()
 
 //-----------------------------------------------------------------------------
 //
-// Checks if node failed based on chance of failure
+// Checks if node/link failed based on chance of failure
 //
 //-----------------------------------------------------------------------------
 
-void node::nodeStatus()
+void node::nodeFailureChance()
 {
     int randNum = 0;
     randNum = rand() % 101;
 
     if(failureChance <= randNum){
-        nodeIsActive = true;
+        status = true;
         cout << "The node: " + name + "is ACTIVE";
     }else{
-        nodeIsActive = false;
-        // Maybe delete node altogether or set it to NULL?
+        status = false;
         cout << "The node: " + name + "has FAILED";
     }
 }
+
+
+
 
 #endif
