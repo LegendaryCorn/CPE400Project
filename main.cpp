@@ -6,6 +6,7 @@
 #include <string>
 #include <thread> // Requires C++11!
 #include <mutex>
+#include <algorithm>
 #include <map>
 #include <time.h>
 #include <stdlib.h>
@@ -31,7 +32,8 @@ bool stopLoop();
 
 // Pathing Algorithm
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB);
-void printSolution(map<string, int> dist, map<string, vector<string> > path, string nodeA, string nodeB);
+void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB);
+void printPath(map<string, string> path, string j, string nodeA);
 
 string minDistance(map<string, int> dist, map<string, bool> set);
 
@@ -376,7 +378,7 @@ bool stopLoop()
 
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
 {
-    map<string, vector<string> > path;
+    map<string, string> path;
     map<string, int> dist;
     map<string, bool> set;
 
@@ -384,7 +386,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
     for(map<string,node*>::iterator i = nodeList.begin(); i != nodeList.end(); i++){
         if(i->second->isNodeActive())
         {
-            path[i->first].push_back(nodeA);
+            path[i->first] = nodeA;
             dist[i->first] = INT_MAX;
             set[i->first] = false;
         }
@@ -413,15 +415,10 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
             //  through u is smaller than current value of dist[v]
             if (!set[v->first] && (nodeList[u]->getLinkStatus(v->first) >= 0) && dist[u] + (nodeList[u]->getLinkStatus(v->first)) < dist[v->first])
             {
-                if(u != nodeA)
-                {
-                    path[v->first].push_back(u);
-                }
-                //cout << v->first << " " << dist[u] + (nodeList[u]->getLinkStatus(v->first)) <<  "-------" << u << "------" << v->first << endl;
+                path[v->first] = u;
                 dist[v->first] = dist[u] + (nodeList[u]->getLinkStatus(v->first));
             }
     }
-    path[nodeB].push_back(nodeB);
 
     printSolution(dist, path, nodeA, nodeB);
 }
@@ -469,7 +466,7 @@ string minDistance(map<string, int> dist, map<string, bool> set)
 //
 //-----------------------------------------------------------------------------
 
-void printSolution(map<string, int> dist, map<string, vector<string> > path, string nodeA, string nodeB)
+void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB)
 {
     printf("Vertex\t\t\t Distance\tPath\n");
     printf("-------------------------------------");
@@ -478,12 +475,19 @@ void printSolution(map<string, int> dist, map<string, vector<string> > path, str
         if(i->first == nodeB)
         {
             cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
-            for(int j = 0; j < path[nodeB].size() - 1; j++)
-            {
-                cout << path[nodeB][j] << "->";
-            }
-            cout << nodeB << endl;
+            printPath(path, i->first, nodeA);
         }
-        //printPath(parent, i);
     }
+}
+
+void printPath(map<string, string> path, string j, string nodeA)
+{
+    if (path[j] == j)
+    {
+        cout << j;
+        return;
+    }
+ 
+    printPath(path, path[j], nodeA);
+    cout << "->" << j;
 }
