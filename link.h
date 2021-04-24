@@ -18,15 +18,16 @@ class link
 
         bool getIsActive();
         int getWeight();
-        int getFailureChance(); 
-        int linkfailureChance();
+        int getFailureChance();
+        void linkFailureChance();
         bool getStatus();
+        bool flipStatus();
 
     private:
         string node1;
         string node2;
-        bool isActive;
         int weight;
+        int failureChance;
         bool status;
 };
 
@@ -34,8 +35,9 @@ link::link(string n1, string n2, int w)
 {
     node1 = n1;
     node2 = n2;
-    isActive = true;
+    status = true;
     weight = w;
+    failureChance = 1;
 }
 
 string link::getOppositeNode(string node)
@@ -47,7 +49,7 @@ string link::getOppositeNode(string node)
 
 bool link::getIsActive()
 {
-    return isActive;
+    return status;
 }
 
 int link::getWeight()
@@ -55,12 +57,18 @@ int link::getWeight()
     return weight;
 }
 
-bool node::getStatus()
+bool link::getStatus()
 {
     return status;
 }
 
-int node::getFailureChance()
+bool link::flipStatus()
+{
+    status = !status;
+    return status;
+}
+
+int link::getFailureChance()
 {
     return failureChance;
 }
@@ -71,11 +79,11 @@ void link::linkFailureChance()
     randNum = rand() % 101;
 
     if(failureChance <= randNum){
-        status = true;
-        cout << "The link: " + name + "is ACTIVE";
+
     }else{
-        status = false;
-        cout << "The link: " + name + "has FAILED";
+        status = !status;
+        cout << node1 << " " << node2 << " " << status << endl;
     }
+}
 
 #endif

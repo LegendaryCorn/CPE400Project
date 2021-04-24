@@ -27,6 +27,8 @@ class node
 
         void nodeFailureChance();
         bool isNodeActive();
+        bool flipStatus();
+        void flipLinkStatus(string nname);
 
     private:
         int data;
@@ -48,6 +50,7 @@ node::node()
     data = '\n';
     name = "";
     status = true;
+    failureChance = 1;
 }
 
 node::node(string nname)
@@ -55,6 +58,7 @@ node::node(string nname)
 	data = '\n';
 	name = nname;
 	status = true;
+	failureChance = 1;
 }
 
 node::node(int ndata, string nname)
@@ -62,6 +66,7 @@ node::node(int ndata, string nname)
     data = ndata;
     name = nname;
     status = true;
+    failureChance = 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -108,6 +113,12 @@ int node::getLinkStatus(string nname)
 	{
 		return -2;
 	}
+
+	if(!neighborLinks[neighborLinks[nname]->getOppositeNode(name)]->getStatus())
+    {
+        return -3;
+    }
+
 
 	return neighborLinks[nname]->getWeight();
 }
@@ -170,6 +181,29 @@ bool node::isNodeActive()
 
 //-----------------------------------------------------------------------------
 //
+// Flips a node's status
+//
+//-----------------------------------------------------------------------------
+
+bool node::flipStatus()
+{
+    status = !status;
+    return status;
+}
+
+//-----------------------------------------------------------------------------
+//
+// Flips a link's status
+//
+//-----------------------------------------------------------------------------
+
+void node::flipLinkStatus(string nname)
+{
+    neighborLinks[nname]->flipStatus();
+}
+
+//-----------------------------------------------------------------------------
+//
 // Checks if node/link failed based on chance of failure
 //
 //-----------------------------------------------------------------------------
@@ -180,11 +214,10 @@ void node::nodeFailureChance()
     randNum = rand() % 101;
 
     if(failureChance <= randNum){
-        status = true;
-        cout << "The node: " + name + "is ACTIVE";
+
     }else{
-        status = false;
-        cout << "The node: " + name + "has FAILED";
+        status = !status;
+        cout << name << " " << status << endl;
     }
 }
 

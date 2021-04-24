@@ -28,6 +28,8 @@ bool createNode(string parameter);
 bool createLink(string parameters);
 bool seeNodes();
 bool seeLinks();
+bool flipNode(string parameter);
+bool flipLink(string parameters);
 bool stopLoop();
 
 // Pathing Algorithm
@@ -114,11 +116,14 @@ void iterationLoop(char* fileName)
 	time_t start = time(NULL); //set start to current time
 	time_t current;
 
+    double step = 0;
+	double stepSize = 1;
+
     mtx.lock();
 	while(!shouldStop){
         mtx.unlock();
 
-		while(!atEndofFile && lineIteration <= difftime(time(&current),start))
+		while(lineIteration <= difftime(time(&current),start) && !atEndofFile)
         {
             //cout << line << endl;
             mtx.lock();
@@ -140,7 +145,18 @@ void iterationLoop(char* fileName)
             }
 		}
 
-        mtx.lock();
+		mtx.lock();
+		if(difftime(current, start) > step){
+            step += stepSize;
+            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
+            {
+                a->second->nodeFailureChance();
+            }
+            for(int b = 0; b < linkList.size(); b++)
+            {
+                linkList[b]->linkFailureChance();
+            }
+		}
 	}
 	mtx.unlock();
 }
@@ -221,6 +237,14 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     if(command == "seelinks")
     {
         return seeLinks();
+    }
+    if(command == "flipnode")
+    {
+        return flipNode(parameters);
+    }
+    if(command == "fliplink")
+    {
+        return flipLink(parameters);
     }
     if(command == "stop")
     {
@@ -344,6 +368,74 @@ bool seeLinks()
 		}
 	}
 	return true;
+}
+
+
+
+//-----------------------------------------------------------------------------
+//
+// bool flipNode
+//
+// This function should disable a node if its enabled and vice versa.
+//
+// inputs:
+//    parameter: The node to create.
+//
+// outputs:
+//    Returns true if the operation was successful.
+//
+//-----------------------------------------------------------------------------
+
+bool flipNode(string parameter)
+{
+    parameter = parameter.substr(0,parameter.find(" ",0));
+
+    if(nodeList.find(parameter) == nodeList.end())
+    {
+        cout << "Node does not exist." << endl;
+        return false;
+    }
+    else
+    {
+        nodeList[parameter]->flipStatus();
+        cout << "Node flipped." << endl;
+        return true;
+    }
+}
+
+//-----------------------------------------------------------------------------
+//
+// bool flipLink
+//
+// This function should disable a link if its enabled and vice versa.
+//
+// outputs:
+//    Returns true if the operation was successful.
+//
+//-----------------------------------------------------------------------------
+
+bool flipLink(string parameters)
+{
+    // Parsing parameters
+    size_t firstSpace = parameters.find(" ",0);
+    size_t secondSpace = parameters.find(" ",firstSpace+1);
+
+    string nodeA = parameters.substr(0,firstSpace);
+    string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
+
+	// Checking if the link is possible
+	if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
+	{
+		cout << "One of those nodes doesn't exist." << endl;
+		return false;
+	}
+	if((nodeList[nodeA]->getLinkStatus(nodeB) != -1))
+	{
+        nodeList[nodeA]->flipLinkStatus(nodeB);
+		return true;
+	}
+    cout << "Link doesn't exist." << endl;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -487,7 +579,7 @@ void printPath(map<string, string> path, string j, string nodeA)
         cout << j;
         return;
     }
- 
+
     printPath(path, path[j], nodeA);
     cout << "->" << j;
 }
