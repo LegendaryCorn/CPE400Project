@@ -47,6 +47,7 @@ mutex mtx; // Mutex lock, YOU SHOULD ONLY MODIFY THE VARIABLES BELOW WHILE IN TH
 bool shouldStop = false; //Determines if the loops should stop
 map<string,node*> nodeList; //List of nodes
 vector<link*> linkList; //List of links
+vector<string> solPath;
 
 int main(int argc, char *argv[])
 {
@@ -485,7 +486,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
     }
 
     //Initialize nodeA as the start of the path
-    //path.push_back(nodeA);
+    solPath.push_back(nodeA);
 
     //Distance from Source node
     dist[nodeA] = 0;
@@ -582,4 +583,5 @@ void printPath(map<string, string> path, string j, string nodeA)
 
     printPath(path, path[j], nodeA);
     cout << "->" << j;
+    solPath.push_back(j);
 }
