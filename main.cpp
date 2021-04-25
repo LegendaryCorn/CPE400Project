@@ -13,6 +13,7 @@
 #include <climits>
 #include "node.h"
 #include "link.h"
+#include "path.h"
 
 using namespace std;
 
@@ -26,6 +27,7 @@ bool handleCommand(string command, string parameters);
 // Commands
 bool createNode(string parameter);
 bool createLink(string parameters);
+bool createPath(string parameters);
 bool seeNodes();
 bool seeLinks();
 bool flipNode(string parameter);
@@ -47,6 +49,7 @@ mutex mtx; // Mutex lock, YOU SHOULD ONLY MODIFY THE VARIABLES BELOW WHILE IN TH
 bool shouldStop = false; //Determines if the loops should stop
 map<string,node*> nodeList; //List of nodes
 vector<link*> linkList; //List of links
+vector<path*> pathList; //List of paths
 vector<string> solPath;
 
 int main(int argc, char *argv[])
@@ -70,8 +73,6 @@ int main(int argc, char *argv[])
     iterationL.join();
     inputL.join();
 
-    optimalPath(nodeList, "California", "Idaho");
-
 	//----------------------------
 	// Deleting the Nodes
 	//----------------------------
@@ -84,6 +85,13 @@ int main(int argc, char *argv[])
 	//----------------------------
 	for(int i = 0; i < linkList.size(); i++){
         delete linkList[i];
+	}
+
+    //----------------------------
+	// Deleting the Paths
+	//----------------------------
+	for(int i = 0; i < pathList.size(); i++){
+        delete pathList[i];
 	}
 
     return 0;
@@ -119,6 +127,8 @@ void iterationLoop(char* fileName)
 
     double step = 0;
 	double stepSize = 1;
+
+    srand(time(0));
 
     mtx.lock();
 	while(!shouldStop){
@@ -175,6 +185,7 @@ void iterationLoop(char* fileName)
 
 void inputLoop()
 {
+    srand(time(0));
     mtx.lock();
 
     while(!shouldStop)
@@ -230,6 +241,10 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     if(command == "createlink")
     {
         return createLink(parameters);
+    }
+    if(command == "createpath")
+    {
+        return createPath(parameters);
     }
     if(command == "seenodes")
     {
@@ -437,6 +452,38 @@ bool flipLink(string parameters)
 	}
     cout << "Link doesn't exist." << endl;
 	return false;
+}
+
+//-----------------------------------------------------------------------------
+//
+// bool createPath
+//
+// This function should create a path between two nodes.
+//
+// outputs:
+//    Returns true if the operation was successful.
+//
+//-----------------------------------------------------------------------------
+
+bool createPath(string parameters)
+{
+    // Parsing parameters
+    size_t firstSpace = parameters.find(" ",0);
+    size_t secondSpace = parameters.find(" ",firstSpace+1);
+
+    string nodeA = parameters.substr(0,firstSpace);
+    string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
+
+	// Checking if the link is possible
+	if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
+	{
+		cout << "One of those nodes doesn't exist." << endl;
+		return false;
+	}
+	solPath.clear();
+    optimalPath(nodeList, nodeA, nodeB);
+    pathList.push_back(new path(solPath));
+    return true;
 }
 
 //-----------------------------------------------------------------------------
