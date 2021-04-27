@@ -13,7 +13,6 @@
 #include <climits>
 #include "node.h"
 #include "link.h"
-#include "path.h"
 
 using namespace std;
 
@@ -27,16 +26,14 @@ bool handleCommand(string command, string parameters);
 // Commands
 bool createNode(string parameter);
 bool createLink(string parameters);
-bool createPath(string parameters);
 bool seeNodes();
 bool seeLinks();
-bool seePaths();
 bool flipNode(string parameter);
 bool flipLink(string parameters);
+bool dtest(string parameters);
 bool stopLoop();
 
 // Path Handler
-void checkPaths();
 
 // Pathing Algorithm
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB);
@@ -53,9 +50,7 @@ mutex mtx; // Mutex lock, YOU SHOULD ONLY MODIFY THE VARIABLES BELOW WHILE IN TH
 bool shouldStop = false; //Determines if the loops should stop
 map<string,node*> nodeList; //List of nodes
 vector<link*> linkList; //List of links
-vector<path*> pathList; //List of paths
 vector<string> solPath;
-int solPathLength;
 
 int main(int argc, char *argv[])
 {
@@ -90,13 +85,6 @@ int main(int argc, char *argv[])
 	//----------------------------
 	for(int i = 0; i < linkList.size(); i++){
         delete linkList[i];
-	}
-
-    //----------------------------
-	// Deleting the Paths
-	//----------------------------
-	for(int i = 0; i < pathList.size(); i++){
-        delete pathList[i];
 	}
 
     return 0;
@@ -172,7 +160,6 @@ void iterationLoop(char* fileName)
             {
                 linkList[b]->linkFailureChance();
             }
-            checkPaths();
 		}
 	}
 	mtx.unlock();
@@ -257,10 +244,6 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     {
         return createLink(parameters);
     }
-    if(command == "createpath")
-    {
-        return createPath(parameters);
-    }
     if(command == "seenodes")
     {
         return seeNodes();
@@ -269,10 +252,6 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     {
         return seeLinks();
     }
-    if(command == "seepaths")
-    {
-        return seePaths();
-    }
     if(command == "flipnode")
     {
         return flipNode(parameters);
@@ -280,6 +259,10 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     if(command == "fliplink")
     {
         return flipLink(parameters);
+    }
+    if(command == "test")
+    {
+        return dtest(parameters);
     }
     if(command == "stop")
     {
@@ -407,25 +390,6 @@ bool seeLinks()
 
 //-----------------------------------------------------------------------------
 //
-// bool seeLinks
-//
-// This function should list all paths.
-//
-// outputs:
-//    Returns true if the operation was successful.
-//
-//-----------------------------------------------------------------------------
-
-bool seePaths()
-{
-    for(int i = 0; i < pathList.size(); i++){
-        pathList[i]->printPath();
-    }
-    return true;
-}
-
-//-----------------------------------------------------------------------------
-//
 // bool flipNode
 //
 // This function should disable a node if its enabled and vice versa.
@@ -450,7 +414,6 @@ bool flipNode(string parameter)
     else
     {
         nodeList[parameter]->flipStatus();
-        checkPaths();
         cout << "Node flipped." << endl;
         return true;
     }
@@ -485,7 +448,6 @@ bool flipLink(string parameters)
 	if((nodeList[nodeA]->getLinkStatus(nodeB) != -1))
 	{
         nodeList[nodeA]->flipLinkStatus(nodeB);
-        checkPaths();
         cout << "Link flipped." << endl;
 		return true;
 	}
@@ -495,41 +457,32 @@ bool flipLink(string parameters)
 
 //-----------------------------------------------------------------------------
 //
-// bool createPath
+// bool dtest
 //
-// This function should create a path between two nodes.
+// This function should test the algorithm.
 //
 // outputs:
 //    Returns true if the operation was successful.
 //
 //-----------------------------------------------------------------------------
-
-bool createPath(string parameters)
+bool dtest(string parameters)
 {
-    // Parsing parameters
     size_t firstSpace = parameters.find(" ",0);
     size_t secondSpace = parameters.find(" ",firstSpace+1);
 
     string nodeA = parameters.substr(0,firstSpace);
     string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
 
-	// Checking if the link is possible
-	if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
+    if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
 	{
 		cout << "One of those nodes doesn't exist." << endl;
 		return false;
 	}
-	solPath.clear();
+
     optimalPath(nodeList, nodeA, nodeB);
-    if(!solPath.empty()){
-        pathList.push_back(new path(solPath, solPathLength));
-        cout << "New path made: " << nodeA << " to " << nodeB << " with distance " << solPathLength << endl;
-    }
-    else{
-        cout << "Invalid Path; Connection Failed" << endl;
-    }
     return true;
 }
+
 
 //-----------------------------------------------------------------------------
 //
@@ -546,30 +499,6 @@ bool stopLoop()
 {
     shouldStop = true;
     return shouldStop;
-}
-
-//-----------------------------------------------------------------------------
-//
-// void checkPaths
-//
-// This function should check to see if no paths were affected by changes.
-//
-// outputs:
-//    Returns true if the operation was successful.
-//
-//-----------------------------------------------------------------------------
-
-void checkPaths()
-{
-    for(int i = 0; i < pathList.size(); i++)
-    {
-        solPath.clear();
-        optimalPath(nodeList, pathList[i]->getStartNode(), pathList[i]->getEndNode());
-        if(pathList[i]->getPathLength() != solPathLength)
-        {
-            pathList[i]->setNewPath(solPath, solPathLength);
-        }
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -628,20 +557,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
                 dist[v->first] = dist[u] + (nodeList[u]->getLinkStatus(v->first));
             }
     }
-
-    if(dist[nodeB] == INT_MAX || dist[nodeB] < 0 || solPath.empty()){
-        solPath.clear();
-        solPathLength = -1;
-    }
-
-    else if(!nodeList[nodeA]->getStatus() || !nodeList[nodeB]->getStatus()){
-        solPath.clear();
-        solPathLength = -1;
-    }
-    else{
-        solPathLength = dist[nodeB];
-        printSolution(dist, path, nodeA, nodeB);
-    }
+    printSolution(dist, path, nodeA, nodeB);
 }
 
 
@@ -689,13 +605,13 @@ string minDistance(map<string, int> dist, map<string, bool> set)
 
 void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB)
 {
-    //printf("Vertex\t\t\t Distance\tPath\n");
-    //printf("-------------------------------------");
+    printf("Vertex\t\t\t Distance\tPath\n");
+    printf("-------------------------------------");
     for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
     {
         if(i->first == nodeB)
         {
-            //cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
+            cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
             printPath(path, i->first, nodeA);
         }
     }
@@ -705,11 +621,11 @@ void printPath(map<string, string> path, string j, string nodeA)
 {
     if (path[j] == j)
     {
-        //cout << j;
+        cout << j;
         return;
     }
 
     printPath(path, path[j], nodeA);
-    //cout << "->" << j;
+    cout << "->" << j;
     solPath.push_back(j);
 }

@@ -6,12 +6,10 @@
 % will ignore these lines.
 %
 % All commands must be in this format: 
-% $time command parameters
+% $0 command parameters
 %
-% For example, to add node "Nevada" at time 2,
-% $2 createnode Nevada
-%
-% Commands must be in chronological order.
+% For example, to add node "Nevada",
+% $0 createnode Nevada
 %
 % Any other lines will be ignored.
 %
@@ -42,7 +40,4 @@ $0 createlink Colorado California 2
 $0 createlink Nevada New_Mexico 6
 $0 createlink California Wyoming 1
 $0 createlink Wyoming Nevada 1
-
-% Past initialization
-$12 createnode Washington
 
