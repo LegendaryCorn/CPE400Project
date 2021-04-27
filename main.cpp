@@ -199,9 +199,18 @@ void inputLoop()
         //----------------------------
         // UI for User Interaction          //Should be fine in the final when user is prompted first
         //----------------------------
-        cout << endl <<  "------------Commands-------------" << endl;
-        cout << "| Options:\t\t\t|\n| \t-seenodes\t\t|\n| \t-seelinks\t\t|\n| \t-stop\t\t\t|" << endl;
-        cout << "---------------------------------" << endl;
+        cout << endl <<  "-----------------------Commands-------------------------" << endl;
+        cout << "| Options:\t\t\t\t\t\t|\n|" ;
+        cout << "\t-createnode <nodeA>\t\t\t\t|\n|";
+        cout << "\t-createlink <nodeA> <nodeB> <dist>\t\t|\n|";
+        cout << "\t-createpath <nodeA> <nodeB>\t\t\t|\n|";
+        cout << "\t-seenodes\t\t\t\t\t|\n|";
+        cout << "\t-seelinks\t\t\t\t\t|\n|";
+        cout << "\t-seepaths\t\t\t\t\t|\n|";
+        cout << "\t-flipnode <node>\t\t\t\t|\n|";
+        cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
+        cout << "\t-stop\t\t\t\t\t\t|" << endl;
+        cout << "--------------------------------------------------------" << endl;
         cout << "> ";
 
         mtx.unlock();
