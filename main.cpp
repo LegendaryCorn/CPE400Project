@@ -190,10 +190,9 @@ void inputLoop()
         cout << "| Options:\t\t\t\t\t\t|\n|" ;
         cout << "\t-createnode <nodeA>\t\t\t\t|\n|";
         cout << "\t-createlink <nodeA> <nodeB> <dist>\t\t|\n|";
-        cout << "\t-createpath <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-seenodes\t\t\t\t\t|\n|";
+        cout << "\t-test <nodeA> <nodeB>\t\t\t\t|\n|";
         cout << "\t-seelinks\t\t\t\t\t|\n|";
-        cout << "\t-seepaths\t\t\t\t\t|\n|";
         cout << "\t-flipnode <node>\t\t\t\t|\n|";
         cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-stop\t\t\t\t\t\t|" << endl;
@@ -609,23 +608,25 @@ void printSolution(map<string, int> dist, map<string, string> path, string nodeA
     printf("-------------------------------------");
     for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
     {
-        if(i->first == nodeB)
-        {
+        //if(i->first == nodeB)
+        //{
             cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
             printPath(path, i->first, nodeA);
-        }
+        //}
     }
 }
 
 void printPath(map<string, string> path, string j, string nodeA)
 {
-    if (path[j] == j)
+    if (path[j] == nodeA)
     {
         cout << j;
         return;
     }
 
     printPath(path, path[j], nodeA);
-    cout << "->" << j;
-    solPath.push_back(j);
+    // cout << "->" << j;
+    // solPath.push_back(j);
+
+
 }
