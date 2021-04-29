@@ -30,10 +30,12 @@ bool seeNodes();
 bool seeLinks();
 bool flipNode(string parameter);
 bool flipLink(string parameters);
+bool findRoute(string parameters);
 bool dtest(string parameters);
 bool stopLoop();
 
 // Path Handler
+string recursiveRoute(string nodeA, string nodeB);
 
 // Pathing Algorithm
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB);
@@ -193,10 +195,11 @@ void inputLoop()
         cout << "\t-createnode <nodeA>\t\t\t\t|\n|";
         cout << "\t-createlink <nodeA> <nodeB> <dist>\t\t|\n|";
         cout << "\t-seenodes\t\t\t\t\t|\n|";
-        cout << "\t-test <nodeA> <nodeB>\t\t\t\t|\n|";
+        cout << "\t-test\t\t\t\t|\n|";
         cout << "\t-seelinks\t\t\t\t\t|\n|";
         cout << "\t-flipnode <node>\t\t\t\t|\n|";
         cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
+        cout << "\t-findroute <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-stop\t\t\t\t\t\t|" << endl;
         cout << "--------------------------------------------------------" << endl;
         cout << "> ";
@@ -260,6 +263,10 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     if(command == "fliplink")
     {
         return flipLink(parameters);
+    }
+    if(command == "findroute")
+    {
+        return findRoute(parameters);
     }
     if(command == "test")
     {
@@ -458,6 +465,37 @@ bool flipLink(string parameters)
 
 //-----------------------------------------------------------------------------
 //
+// bool findRoute
+//
+// This function should find a route from node A to node B.
+//
+// outputs:
+//    Returns true if the operation was successful.
+//
+//-----------------------------------------------------------------------------
+
+bool findRoute(string parameters)
+{
+    // Parsing parameters
+    size_t firstSpace = parameters.find(" ",0);
+    size_t secondSpace = parameters.find(" ",firstSpace+1);
+
+    string nodeA = parameters.substr(0,firstSpace);
+    string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
+
+	// Checking if the link is possible
+	if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
+	{
+		cout << "One of those nodes doesn't exist." << endl;
+		return false;
+	}
+
+    recursiveRoute(nodeA, nodeB);
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+//
 // bool dtest
 //
 // This function should test the algorithm.
@@ -503,6 +541,35 @@ bool stopLoop()
 {
     shouldStop = true;
     return shouldStop;
+}
+
+//-----------------------------------------------------------------------------
+//
+// string recursiveRoute
+//
+// This function should print the strings in the path.
+//
+// outputs:
+//    Returns the next string.
+//
+//-----------------------------------------------------------------------------
+string recursiveRoute(string nodeA, string nodeB)
+{
+    if(nodeA == nodeB)
+    {
+        cout << nodeB << endl;
+        return nodeB;
+    }
+    if(nodeList[nodeA]->seeTable(nodeB) == "")
+    {
+        cout << "Invalid route!" << endl;
+        return "";
+    }
+
+    cout << nodeA << " -> ";
+    recursiveRoute(nodeList[nodeA]->seeTable(nodeB), nodeB);
+    return nodeA;
+
 }
 
 //-----------------------------------------------------------------------------
