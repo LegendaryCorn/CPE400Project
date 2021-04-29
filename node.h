@@ -30,6 +30,10 @@ class node
         bool flipStatus();
         void flipLinkStatus(string nname);
 
+        void editTable(string endNode, string neighborNode);
+        string seeTable(string endNode);
+        void clearTable();
+
     private:
         int data;
         bool status;
@@ -37,6 +41,7 @@ class node
         int failureChance;
         bool nodeIsActive;
         map<string,link*> neighborLinks;
+        map<string,string> forwardingTable;
 };
 
 //-----------------------------------------------------------------------------
@@ -221,7 +226,41 @@ void node::nodeFailureChance()
     }
 }
 
+//-----------------------------------------------------------------------------
+//
+// Edits the forwarding table
+//
+//-----------------------------------------------------------------------------
 
+void node::editTable(string endNode, string neighborNode){
+    forwardingTable[endNode] = neighborNode;
+}
+
+//-----------------------------------------------------------------------------
+//
+// Returns the neighbor to forward to
+//
+//-----------------------------------------------------------------------------
+
+string node::seeTable(string endNode)
+{
+    if(forwardingTable.find(endNode) == forwardingTable.end() || forwardingTable[endNode] == "")
+    {
+        return "";
+    }
+    return forwardingTable[endNode];
+}
+
+//-----------------------------------------------------------------------------
+//
+// Clears the table
+//
+//-----------------------------------------------------------------------------
+
+void node::clearTable()
+{
+    forwardingTable.clear();
+}
 
 
 #endif

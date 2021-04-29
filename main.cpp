@@ -38,7 +38,7 @@ bool stopLoop();
 // Pathing Algorithm
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB);
 void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB);
-void printPath(map<string, string> path, string j, string nodeA);
+void printPath(map<string, string> path, string j, string nodeA, string nodeB);
 
 string minDistance(map<string, int> dist, map<string, bool> set);
 
@@ -150,6 +150,7 @@ void iterationLoop(char* fileName)
 		}
 
 		mtx.lock();
+		/* Disabled for this test
 		if(difftime(current, start) > step){
             step += stepSize;
             for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
@@ -161,6 +162,7 @@ void iterationLoop(char* fileName)
                 linkList[b]->linkFailureChance();
             }
 		}
+		*/
 	}
 	mtx.unlock();
 }
@@ -466,19 +468,22 @@ bool flipLink(string parameters)
 //-----------------------------------------------------------------------------
 bool dtest(string parameters)
 {
-    size_t firstSpace = parameters.find(" ",0);
-    size_t secondSpace = parameters.find(" ",firstSpace+1);
+    for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
+        a->second->clearTable();
+        optimalPath(nodeList, a->first, "");
 
-    string nodeA = parameters.substr(0,firstSpace);
-    string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
+        for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
+            string t = a->second->seeTable(b->first);
 
-    if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
-	{
-		cout << "One of those nodes doesn't exist." << endl;
-		return false;
-	}
+            cout << a->first << " -> " << b->first << ": ";
 
-    optimalPath(nodeList, nodeA, nodeB);
+            if(t == "")
+                cout << "UNAVAILABLE" << endl;
+            else
+                cout << t << endl;
+        }
+    }
+
     return true;
 }
 
@@ -604,27 +609,31 @@ string minDistance(map<string, int> dist, map<string, bool> set)
 
 void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB)
 {
-    printf("Vertex\t\t\t Distance\tPath\n");
-    printf("-------------------------------------");
+    //printf("Vertex\t\t\t Distance\tPath\n");
+    //printf("-------------------------------------");
+    //cout << endl;
     for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
     {
         //if(i->first == nodeB)
         //{
-            cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
-            printPath(path, i->first, nodeA);
+            //cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
+            if(dist[i->first] != INT_MAX && dist[i->first] >= 0){
+                printPath(path, i->first, nodeA, i->first);
+            }
         //}
     }
 }
 
-void printPath(map<string, string> path, string j, string nodeA)
+void printPath(map<string, string> path, string j, string nodeA, string nodeB)
 {
     if (path[j] == nodeA)
     {
-        cout << j;
+        nodeList[nodeA]->editTable(nodeB, j);
+        //cout << nodeA << " " << nodeB << " " << j << endl;
         return;
     }
 
-    printPath(path, path[j], nodeA);
+    printPath(path, path[j], nodeA, nodeB);
     // cout << "->" << j;
     // solPath.push_back(j);
 
