@@ -21,6 +21,7 @@ using namespace std;
 // Thread loops
 void iterationLoop(char* fileName);
 void inputLoop();
+void fastLoop();
 
 // Command handler
 bool handleCommand(string command, string parameters);
@@ -54,7 +55,11 @@ mutex mtx; // Mutex lock, YOU SHOULD ONLY MODIFY THE VARIABLES BELOW WHILE IN TH
 bool shouldStop = false; //Determines if the loops should stop
 map<string,node*> nodeList; //List of nodes
 vector<link*> linkList; //List of links
-vector<string> solPath;
+vector<string> nodesToClose; //List of nodes to shut down
+vector<string> linksToClose; //List of links to shut down
+bool dRun = false; // Determines if dijkstra's is running
+bool fRun = false; // Determines if the fast algorithm needs to run
+map<string,map<string,string>> forwardingTables; // The forwarding table, only accessed by IterationLoop
 
 int main(int argc, char *argv[])
 {
@@ -73,9 +78,11 @@ int main(int argc, char *argv[])
 
     thread iterationL (iterationLoop, argv[1]);
     thread inputL (inputLoop);
+    thread fastL (fastLoop);
 
     iterationL.join();
     inputL.join();
+    fastL.join();
 
 	//----------------------------
 	// Deleting the Nodes
@@ -127,6 +134,8 @@ void iterationLoop(char* fileName)
 
     srand(time(0));
 
+    bool firstTime = true;
+
     mtx.lock();
 	while(!shouldStop){
         mtx.unlock();
@@ -153,7 +162,27 @@ void iterationLoop(char* fileName)
             }
 		}
 
-		mtx.lock();
+        mtx.lock();
+
+		if(firstTime){
+		    dRun = true;
+            mtx.unlock();
+            forwardingTables.clear();
+            dtest("");
+            mtx.lock();
+            dRun = false;
+            fRun = false;
+            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
+                a->second->clearTable();
+                for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
+                    if(forwardingTables.find(a->first) != forwardingTables.end()  && forwardingTables[a->first].find(b->first) != forwardingTables[a->first].end())
+                        a->second->editTable(b->first, forwardingTables[a->first][b->first]);
+                }
+            }
+            firstTime = false;
+		}
+
+
 		/* Disabled for this test
 		if(difftime(current, start) > step){
             step += stepSize;
@@ -167,6 +196,44 @@ void iterationLoop(char* fileName)
             }
 		}
 		*/
+        dRun = false;
+		for(int i = 0; i < nodesToClose.size(); i++)
+        {
+            nodeList[nodesToClose[i]]->flipStatus();
+            dRun = true;
+            fRun = true;
+        }
+        for(int i = 0; i < linksToClose.size(); i++)
+        {
+            size_t firstSpace = linksToClose[i].find(" ",0);
+            size_t secondSpace = linksToClose[i].find(" ",firstSpace+1);
+
+            string nodeA = linksToClose[i].substr(0,firstSpace);
+            string nodeB = linksToClose[i].substr(firstSpace+1,secondSpace-firstSpace-1);
+
+            nodeList[nodeA]->flipLinkStatus(nodeB);
+            dRun = true;
+            fRun = true;
+        }
+
+        if(dRun){
+            mtx.unlock();
+            forwardingTables.clear();
+            dtest("");
+            mtx.lock();
+            dRun = false;
+            fRun = false;
+
+            nodesToClose.clear();
+            linksToClose.clear();
+            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
+                a->second->clearTable();
+                for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
+                    if(forwardingTables.find(a->first) != forwardingTables.end()  && forwardingTables[a->first].find(b->first) != forwardingTables[a->first].end())
+                        a->second->editTable(b->first, forwardingTables[a->first][b->first]);
+                }
+            }
+        }
 	}
 	mtx.unlock();
 }
@@ -197,7 +264,6 @@ void inputLoop()
         cout << "\t-createnode <nodeA>\t\t\t\t|\n|";
         cout << "\t-createlink <nodeA> <nodeB> <dist>\t\t|\n|";
         cout << "\t-seenodes\t\t\t\t\t|\n|";
-        cout << "\t-test\t\t\t\t\t\t|\n|";
         cout << "\t-seelinks\t\t\t\t\t|\n|";
         cout << "\t-flipnode <node>\t\t\t\t|\n|";
         cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
@@ -217,10 +283,36 @@ void inputLoop()
         // Parse input string
         string command = inp.substr(0,inp.find(" ",0));
         string parameters = inp.substr(inp.find(" ",0)+1,inp.size());
-
         // Handle Command
         mtx.lock();
         handleCommand(command, parameters);
+    }
+
+    mtx.unlock();
+}
+
+//-----------------------------------------------------------------------------
+//
+// void fastLoop
+//
+// This function should calculate the fast routes when Dijkstra's is running.
+//
+//-----------------------------------------------------------------------------
+
+void fastLoop()
+{
+
+    mtx.lock();
+
+    while(!shouldStop)
+    {
+        mtx.unlock();
+        mtx.lock();
+        if(fRun == true)
+        {
+            // Function goes here
+            fRun == false;
+        }
     }
 
     mtx.unlock();
@@ -242,11 +334,11 @@ void inputLoop()
 
 bool handleCommand(string command, string parameters) //If someone has a better way to do this lmk
 {
-    if(command == "createnode")
+    if(command == "createnode" && !dRun)
     {
         return createNode(parameters);
     }
-    if(command == "createlink")
+    if(command == "createlink" && !dRun)
     {
         return createLink(parameters);
     }
@@ -258,21 +350,17 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     {
         return seeLinks();
     }
-    if(command == "flipnode")
+    if(command == "flipnode" && !dRun)
     {
         return flipNode(parameters);
     }
-    if(command == "fliplink")
+    if(command == "fliplink" && !dRun)
     {
         return flipLink(parameters);
     }
     if(command == "findroute")
     {
         return findRoute(parameters);
-    }
-    if(command == "test")
-    {
-        return dtest(parameters);
     }
     if(command == "stop")
     {
@@ -423,7 +511,7 @@ bool flipNode(string parameter)
     }
     else
     {
-        nodeList[parameter]->flipStatus();
+        nodesToClose.push_back(parameter);
         cout << "Node flipped." << endl;
         return true;
     }
@@ -457,7 +545,7 @@ bool flipLink(string parameters)
 	}
 	if((nodeList[nodeA]->getLinkStatus(nodeB) != -1))
 	{
-        nodeList[nodeA]->flipLinkStatus(nodeB);
+        linksToClose.push_back(parameters);
         cout << "Link flipped." << endl;
 		return true;
 	}
@@ -509,22 +597,12 @@ bool findRoute(string parameters)
 bool dtest(string parameters)
 {
     for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
-        a->second->clearTable();
         std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
-        std::uniform_int_distribution<> dist{1, 5};
+        std::uniform_int_distribution<> dist{1, 2};
         std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
 
-        optimalPath(nodeList, a->first, "");
-
-        for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
-            string t = a->second->seeTable(b->first);
-
-            cout << a->first << " -> " << b->first << ": ";
-
-            if(t == "")
-                cout << "UNAVAILABLE" << endl;
-            else
-                cout << t << endl;
+        if(a->second->getStatus()){
+            optimalPath(nodeList, a->first, "");
         }
     }
 
@@ -608,7 +686,7 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
     }
 
     //Initialize nodeA as the start of the path
-    solPath.push_back(nodeA);
+    //solPath.push_back(nodeA);
 
     //Distance from Source node
     dist[nodeA] = 0;
@@ -701,8 +779,8 @@ void printPath(map<string, string> path, string j, string nodeA, string nodeB)
 {
     if (path[j] == nodeA)
     {
-        nodeList[nodeA]->editTable(nodeB, j);
-        //cout << nodeA << " " << nodeB << " " << j << endl;
+        forwardingTables[nodeA][nodeB] = j;
+        cout << nodeA << " " << nodeB << " " << j << endl;
         return;
     }
 
