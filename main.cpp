@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <random>
+#include <chrono>
 #include <thread> // Requires C++11!
 #include <mutex>
 #include <algorithm>
@@ -195,7 +197,7 @@ void inputLoop()
         cout << "\t-createnode <nodeA>\t\t\t\t|\n|";
         cout << "\t-createlink <nodeA> <nodeB> <dist>\t\t|\n|";
         cout << "\t-seenodes\t\t\t\t\t|\n|";
-        cout << "\t-test\t\t\t\t|\n|";
+        cout << "\t-test\t\t\t\t\t\t|\n|";
         cout << "\t-seelinks\t\t\t\t\t|\n|";
         cout << "\t-flipnode <node>\t\t\t\t|\n|";
         cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
@@ -508,6 +510,10 @@ bool dtest(string parameters)
 {
     for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
         a->second->clearTable();
+        std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
+        std::uniform_int_distribution<> dist{1, 5};
+        std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
+
         optimalPath(nodeList, a->first, "");
 
         for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
