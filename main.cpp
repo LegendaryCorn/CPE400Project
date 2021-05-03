@@ -516,7 +516,7 @@ bool seeLinks()
 
 bool flipNode(string parameter)
 {
-
+    /*
     parameter = parameter.substr(0,parameter.find(" ",0));
 
     if(nodeList.find(parameter) == nodeList.end())
@@ -530,10 +530,10 @@ bool flipNode(string parameter)
         cout << "Node flipped." << endl;
         return true;
     }
-
-    //nodesToClose.push_back("Nevada");
-    //nodesToClose.push_back("Idaho");
-    //return true;
+    */
+    nodesToClose.push_back("Nevada");
+    nodesToClose.push_back("Idaho");
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -619,7 +619,7 @@ bool dtest(string parameters)
 {
     for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
         std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
-        std::uniform_int_distribution<> dist{1, 4};
+        std::uniform_int_distribution<> dist{1, 2};
         std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
 
         if(a->second->getStatus()){
@@ -841,13 +841,12 @@ void tempRoute()
 
     for(int i = 0; i < nodesToClose.size(); i++)
     {
-
         // Find neighbors
         vector<string> neighbors;
         for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
         {
             int test = nodeList[nodesToClose[i]]->getLinkStatus(a->first);
-            if(test >= 0 || test == -2)
+            if((test >= 0 || test == -2) && a->second->getStatus())
             {
                 neighbors.push_back(a->first);
             }

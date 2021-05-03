@@ -124,7 +124,6 @@ int node::getLinkStatus(string nname)
         return -3;
     }
 
-
 	return neighborLinks[nname]->getWeight();
 }
 
