@@ -840,14 +840,15 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
     queue<vector<string> > q;
     vector<string> path;
     // path vector to store the current path
-    if(nodeList[nodeA]->getStatus()){
+    if(nodeList[nodeA]->getStatus())
+    {
         path.push_back(nodeA);
         q.push(path);
     }
 
     while (!q.empty())
     {
-        cout << 1;
+        //cout << q.size() << endl;
         path = q.front();
         q.pop();
         string last = path[path.size() - 1];
@@ -882,14 +883,14 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
             }
         }
     }
-
 }
 
 int isNotVisited(string x, vector<string> path)
 {
     for(int i = 0; i < path.size(); i++)
     {
-        if(nodeList.find(x) == nodeList.end())
+        if(std::find(path.begin(), path.end(), x) != path.end())
+        //if(nodeList.find(x) == nodeList.end())
         {
             return 0;
         }
