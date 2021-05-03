@@ -7,6 +7,7 @@
 #include <random>
 #include <chrono>
 #include <thread> // Requires C++11!
+#include <queue>
 #include <mutex>
 #include <algorithm>
 #include <map>
@@ -40,12 +41,17 @@ bool stopLoop();
 // Path Handler
 string recursiveRoute(string nodeA, string nodeB);
 
-// Pathing Algorithm
+// Dijkstra Algorithm
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB);
 void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB);
 void printPath(map<string, string> path, string j, string nodeA, string nodeB);
-
 string minDistance(map<string, int> dist, map<string, bool> set);
+
+// DFS Algorithm
+void printBFSPath(vector<string> path);
+void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int nodes);
+int isNotVisited(string x, vector<string> path);
+
 
 
 
@@ -311,8 +317,10 @@ void fastLoop()
         if(fRun == true)
         {
             // Function goes here
+            findPaths(nodeList, "California", "New_Mexico", 8);
             fRun == false;
         }
+        
     }
 
     mtx.unlock();
@@ -605,6 +613,7 @@ bool dtest(string parameters)
             optimalPath(nodeList, a->first, "");
         }
     }
+    cout << "----Finished Dijkstra's Calculations----" << endl;
 
     return true;
 }
@@ -775,18 +784,104 @@ void printSolution(map<string, int> dist, map<string, string> path, string nodeA
     }
 }
 
+
+//-----------------------------------------------------------------------------
+//
+// void printPath
+//
+// Function to recursively print forwarding table path
+//
+// inputs:
+//    dist: A copy of the entire dist map
+//    path: A copy of the entire set map
+//    nodeA: A copy of the source node
+//    nodeB: A copy of the destination 
+//
+//-----------------------------------------------------------------------------
 void printPath(map<string, string> path, string j, string nodeA, string nodeB)
 {
     if (path[j] == nodeA)
     {
         forwardingTables[nodeA][nodeB] = j;
-        cout << nodeA << " " << nodeB << " " << j << endl;
+        cout << nodeA << " to " << nodeB << " through " << j << endl;
         return;
     }
 
     printPath(path, path[j], nodeA, nodeB);
     // cout << "->" << j;
     // solPath.push_back(j);
+}
 
+void printBFSPath(vector<string> path)
+{
+    int size = path.size();
+    for (int i = 0; i < size; i++)
+    {
+        cout << path[i] << " ";   
+    }
 
+    cout << endl;
+}
+
+void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int nodes)
+{
+    // create a queue which stores
+    // the paths
+    queue<vector<string> > q;
+ 
+    // path vector to store the current path
+    vector<string> path;
+    path.push_back(nodeA);
+    q.push(path);
+
+    while (!q.empty()) 
+    {
+        path = q.front();
+        q.pop();
+        string last = path[path.size() - 1];
+ 
+        // if last vertex is the desired destination
+        // then print the path
+        if (last == nodeB)
+        {
+            printBFSPath(path);
+            while(!q.empty())
+            {
+                q.pop();
+            }
+        } 
+ 
+        else
+        {
+            // traverse to all the nodes connected to
+            // current vertex and push new path to queue
+            for (map<string, node*>::iterator i = nodeList.begin(); i != nodeList.end(); i++)
+            {
+                //Check if link exists
+                if(nodeList[last]->getLinkStatus(i->first) >= 0)
+                {
+                    if(isNotVisited(i->first, path))
+                    {
+                        vector<string> newpath(path);
+                        newpath.push_back(i->first);
+                        q.push(newpath);
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+int isNotVisited(string x, vector<string> path)
+{
+    for(int i = 0; i < path.size(); i++)
+    {
+        if(nodeList.find(x) == nodeList.end())
+        {
+            return 0;
+        }
+    }
+
+    return 1;
 }
