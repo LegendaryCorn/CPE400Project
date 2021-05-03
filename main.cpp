@@ -871,7 +871,7 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
             for (map<string, node*>::iterator i = nodeList.begin(); i != nodeList.end(); i++)
             {
                 //Check if link exists
-                if(nodeList[last]->getLinkStatus(i->first) >= 0)
+                if(i->second->getStatus() && nodeList[last]->getLinkStatus(i->first) >= 0)
                 {
                     if(isNotVisited(i->first, path))
                     {
