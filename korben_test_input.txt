@@ -30,7 +30,7 @@ $0 createnode Wyoming
 
 $0 createlink California Nevada 5
 $0 createlink Utah Nevada 10
-$0 createlink New_Mexico Idaho 4
+$0 createlink New_Mexico Idaho 12
 $0 createlink Arizona Colorado 7
 $0 createlink Oregon California 6
 $0 createlink Nevada Idaho 2
