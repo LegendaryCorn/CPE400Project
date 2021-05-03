@@ -47,6 +47,9 @@ void printSolution(map<string, int> dist, map<string, string> path, string nodeA
 void printPath(map<string, string> path, string j, string nodeA, string nodeB);
 string minDistance(map<string, int> dist, map<string, bool> set);
 
+// Temporary Route
+void tempRoute();
+
 // DFS Algorithm
 void printBFSPath(vector<string> path);
 void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int nodes);
@@ -317,10 +320,10 @@ void fastLoop()
         if(fRun == true)
         {
             // Function goes here
-            findPaths(nodeList, "California", "New_Mexico", 8);
-            fRun == false;
+            tempRoute();
+            fRun = false;
         }
-        
+
     }
 
     mtx.unlock();
@@ -544,6 +547,8 @@ bool flipLink(string parameters)
 
     string nodeA = parameters.substr(0,firstSpace);
     string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
+
+
 
 	// Checking if the link is possible
 	if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
@@ -795,7 +800,7 @@ void printSolution(map<string, int> dist, map<string, string> path, string nodeA
 //    dist: A copy of the entire dist map
 //    path: A copy of the entire set map
 //    nodeA: A copy of the source node
-//    nodeB: A copy of the destination 
+//    nodeB: A copy of the destination
 //
 //-----------------------------------------------------------------------------
 void printPath(map<string, string> path, string j, string nodeA, string nodeB)
@@ -803,7 +808,7 @@ void printPath(map<string, string> path, string j, string nodeA, string nodeB)
     if (path[j] == nodeA)
     {
         forwardingTables[nodeA][nodeB] = j;
-        cout << nodeA << " to " << nodeB << " through " << j << endl;
+        //cout << nodeA << " to " << nodeB << " through " << j << endl;
         return;
     }
 
@@ -812,12 +817,17 @@ void printPath(map<string, string> path, string j, string nodeA, string nodeB)
     // solPath.push_back(j);
 }
 
+void tempRoute()
+{
+    findPaths(nodeList, "California", "New_Mexico", 8);
+}
+
 void printBFSPath(vector<string> path)
 {
     int size = path.size();
     for (int i = 0; i < size; i++)
     {
-        cout << path[i] << " ";   
+        cout << path[i] << " ";
     }
 
     cout << endl;
@@ -828,18 +838,20 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
     // create a queue which stores
     // the paths
     queue<vector<string> > q;
- 
-    // path vector to store the current path
     vector<string> path;
-    path.push_back(nodeA);
-    q.push(path);
+    // path vector to store the current path
+    if(nodeList[nodeA]->getStatus()){
+        path.push_back(nodeA);
+        q.push(path);
+    }
 
-    while (!q.empty()) 
+    while (!q.empty())
     {
+        cout << 1;
         path = q.front();
         q.pop();
         string last = path[path.size() - 1];
- 
+
         // if last vertex is the desired destination
         // then print the path
         if (last == nodeB)
@@ -849,8 +861,8 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
             {
                 q.pop();
             }
-        } 
- 
+        }
+
         else
         {
             // traverse to all the nodes connected to
