@@ -54,7 +54,7 @@ bool impossiblePathB(string startNode, string endNode, string brokenNodeA, strin
 
 // DFS Algorithm
 void printBFSPath(vector<string> path);
-void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int nodes);
+void findPaths(map<string, node*> nodeList, string nodeA, string nodeB);
 int isNotVisited(string x, vector<string> path);
 
 
@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
 	//----------------------------
 	// Test for Appropriate Input
 	//----------------------------
-
 	if(argc != 2){
 		cout << "Please name the input file in the command line." << endl;
 		return 0;
@@ -87,7 +86,6 @@ int main(int argc, char *argv[])
 	//----------------------------
 	// Time Loop
 	//----------------------------
-
     thread iterationL (iterationLoop, argv[1]);
     thread inputL (inputLoop);
     thread fastL (fastLoop);
@@ -129,24 +127,19 @@ void iterationLoop(char* fileName)
 {
     //Initialization
     int lineIteration = 0;
-
     ifstream infile;
 	string line = "";
 	infile.open(fileName);
 	bool atEndofFile = false;
-
 	string command = "";
 	string parameters = "";
-
 	time_t start = time(NULL); //set start to current time
 	time_t current;
-
     double step = 0;
 	double stepSize = 4;
-
     srand(time(0));
-
     bool firstTime = true;
+
 
     mtx.lock();
 	while(!shouldStop){
@@ -154,7 +147,6 @@ void iterationLoop(char* fileName)
 
 		while(lineIteration <= difftime(time(&current),start) && !atEndofFile)
         {
-            //cout << line << endl;
             mtx.lock();
             handleCommand(command, parameters);
             mtx.unlock();
@@ -168,7 +160,9 @@ void iterationLoop(char* fileName)
 				command = line.substr(firstSpace+1,secondSpace-firstSpace-1);
 				parameters = line.substr(secondSpace+1,line.size());
             }
-            else{
+
+            else
+            {
                 command = "";
                 parameters = "";
             }
@@ -176,7 +170,8 @@ void iterationLoop(char* fileName)
 
         mtx.lock();
 
-		if(firstTime){
+		if(firstTime)
+        {
 		    dRun = true;
             mtx.unlock();
             forwardingTables.clear();
@@ -194,20 +189,6 @@ void iterationLoop(char* fileName)
             firstTime = false;
 		}
 
-
-		/* Disabled for this test
-		if(difftime(current, start) > step){
-            step += stepSize;
-            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
-            {
-                a->second->nodeFailureChance();
-            }
-            for(int b = 0; b < linkList.size(); b++)
-            {
-                linkList[b]->linkFailureChance();
-            }
-		}
-		*/
         dRun = false;
 		for(int i = 0; i < nodesToClose.size(); i++)
         {
@@ -238,9 +219,11 @@ void iterationLoop(char* fileName)
 
             nodesToClose.clear();
             linksToClose.clear();
-            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
+            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
+            {
                 a->second->clearTable();
-                for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
+                for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++)
+                {
                     if(forwardingTables.find(a->first) != forwardingTables.end()  && forwardingTables[a->first].find(b->first) != forwardingTables[a->first].end())
                         a->second->editTable(b->first, forwardingTables[a->first][b->first]);
                 }
@@ -289,12 +272,11 @@ void inputLoop()
         // Get input
         string inp;
         getline(cin, inp);
-        //cin.getline(i,256); //line
-        //cout << i;
-        //cout << inp;
+
         // Parse input string
         string command = inp.substr(0,inp.find(" ",0));
         string parameters = inp.substr(inp.find(" ",0)+1,inp.size());
+
         // Handle Command
         mtx.lock();
         handleCommand(command, parameters);
@@ -313,7 +295,6 @@ void inputLoop()
 
 void fastLoop()
 {
-
     mtx.lock();
 
     while(!shouldStop)
@@ -322,7 +303,6 @@ void fastLoop()
         mtx.lock();
         if(fRun == true)
         {
-            // Function goes here
             tempRoute();
             cout << "----Finished Fast Route Calculations----" << endl;
             fRun = false;
@@ -397,16 +377,21 @@ bool handleCommand(string command, string parameters) //If someone has a better 
 //    Returns true if the operation was successful.
 //
 //-----------------------------------------------------------------------------
+
 bool createNode(string parameter)
 {
+    // Initialize parameters
     parameter = parameter.substr(0,parameter.find(" ",0));
 
+    // If node does not exist, create
     if(nodeList.find(parameter) == nodeList.end())
     {
         nodeList[parameter] = new node(parameter);
         cout << "Node created: " << parameter << endl;
         return true;
     }
+
+    // Else node exists
     else
     {
         cout << "Node already exists." << endl;
@@ -432,10 +417,9 @@ bool createNode(string parameter)
 
 bool createLink(string parameters)
 {
-    // Parsing parameters
+    // Initialize by parsing parameters
     size_t firstSpace = parameters.find(" ",0);
     size_t secondSpace = parameters.find(" ",firstSpace+1);
-
     string nodeA = parameters.substr(0,firstSpace);
     string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
     int weight = stoi(parameters.substr(secondSpace+1,parameters.size()));
@@ -449,7 +433,6 @@ bool createLink(string parameters)
 
 	// Forming the link
     linkList.push_back(new link(nodeA, nodeB, weight));
-
 	nodeList[nodeA]->setLink(linkList[linkList.size()-1]);
 	nodeList[nodeB]->setLink(linkList[linkList.size()-1]);
 	cout << "Link created: " << nodeA << " - " << nodeB << " with weight " << weight << endl;
@@ -469,6 +452,7 @@ bool createLink(string parameters)
 
 bool seeNodes()
 {
+    // Iterate nodeList and print all nodes
     cout << endl << "Nodes: " << endl;
     for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
         cout << a->first << endl;
@@ -489,6 +473,7 @@ bool seeNodes()
 
 bool seeLinks()
 {
+    // Iterate nodeList and print all links
     cout << endl << "Links: " << endl;
 	for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
 		for(map<string,node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
@@ -517,7 +502,7 @@ bool seeLinks()
 
 bool flipNode(string parameter)
 {
-
+    // Initialize by parsing parameter
     parameter = parameter.substr(0,parameter.find(" ",0));
 
     if(nodeList.find(parameter) == nodeList.end())
@@ -547,14 +532,11 @@ bool flipNode(string parameter)
 
 bool flipLink(string parameters)
 {
-    // Parsing parameters
+    // Initialize by parsing parameters
     size_t firstSpace = parameters.find(" ",0);
     size_t secondSpace = parameters.find(" ",firstSpace+1);
-
     string nodeA = parameters.substr(0,firstSpace);
     string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
-
-
 
 	// Checking if the link is possible
 	if((nodeList.find(nodeA) == nodeList.end()) || (nodeList.find(nodeB) == nodeList.end()))
@@ -562,6 +544,8 @@ bool flipLink(string parameters)
 		cout << "One of those nodes doesn't exist." << endl;
 		return false;
 	}
+
+    //Flip link if found
 	if((nodeList[nodeA]->getLinkStatus(nodeB) != -1))
 	{
         linksToClose.push_back(parameters);
@@ -585,10 +569,9 @@ bool flipLink(string parameters)
 
 bool findRoute(string parameters)
 {
-    // Parsing parameters
+    // Initialize by parsing parameters
     size_t firstSpace = parameters.find(" ",0);
     size_t secondSpace = parameters.find(" ",firstSpace+1);
-
     string nodeA = parameters.substr(0,firstSpace);
     string nodeB = parameters.substr(firstSpace+1,secondSpace-firstSpace-1);
 
@@ -599,7 +582,9 @@ bool findRoute(string parameters)
 		return false;
 	}
 
+    // Call recursiveRoute to print out strings
     recursiveRoute(nodeA, nodeB);
+
     return true;
 }
 
@@ -615,12 +600,17 @@ bool findRoute(string parameters)
 //-----------------------------------------------------------------------------
 bool dtest(string parameters)
 {
-    for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
+    // Iterate through nodeList 
+    for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
+    {
+        // "Delay" function to simulate long calculation times
         std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
         std::uniform_int_distribution<> dist{1, 2};
         std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
 
-        if(a->second->getStatus()){
+        // Call for and calculate Dijkstra's Alg
+        if(a->second->getStatus())
+        {
             optimalPath(nodeList, a->first, "");
         }
     }
@@ -659,11 +649,14 @@ bool stopLoop()
 //-----------------------------------------------------------------------------
 string recursiveRoute(string nodeA, string nodeB)
 {
+    // If src is dst, return 
     if(nodeA == nodeB)
     {
         cout << nodeB << endl;
         return nodeB;
     }
+
+    // Check for invalid route
     if(nodeList[nodeA]->seeTable(nodeB) == "")
     {
         cout << "Invalid route!" << endl;
@@ -672,15 +665,15 @@ string recursiveRoute(string nodeA, string nodeB)
 
     cout << nodeA << " -> ";
     recursiveRoute(nodeList[nodeA]->seeTable(nodeB), nodeB);
-    return nodeA;
 
+    return nodeA;
 }
 
 //-----------------------------------------------------------------------------
 //
 // void optimalPath
 //
-// Iterates through the links of nodeList using Dijkstra's algorithm
+// Iterates through the nodes and links of nodeList using Dijkstra's algorithm
 //
 // inputs:
 //    nodeList: A copy of the entire nodeList
@@ -691,6 +684,7 @@ string recursiveRoute(string nodeA, string nodeB)
 
 void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
 {
+    //Initializations
     map<string, string> path;
     map<string, int> dist;
     map<string, bool> set;
@@ -704,9 +698,6 @@ void optimalPath(map<string, node*> nodeList, string nodeA, string nodeB)
             set[i->first] = false;
         }
     }
-
-    //Initialize nodeA as the start of the path
-    //solPath.push_back(nodeA);
 
     //Distance from Source node
     dist[nodeA] = 0;
@@ -775,23 +766,21 @@ string minDistance(map<string, int> dist, map<string, bool> set)
 // inputs:
 //    dist: A copy of the entire dist map
 //    path: A copy of the entire set map
+//    nodeA: A copy of nodeA
+//    nodeB: A copy of nodeB
 //
 //-----------------------------------------------------------------------------
 
 void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB)
 {
-    //printf("Vertex\t\t\t Distance\tPath\n");
-    //printf("-------------------------------------");
-    //cout << endl;
+    // Iterate through dist map 
     for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
     {
-        //if(i->first == nodeB)
-        //{
-            //cout << endl << nodeA << " -> " << i->first << "\t\t" << dist[i->first] << " ";
-            if(dist[i->first] != INT_MAX && dist[i->first] >= 0){
-                printPath(path, i->first, nodeA, i->first);
-            }
-        //}
+        // Start printPath recursive call to print Dijkstra's calculations
+        if(dist[i->first] != INT_MAX && dist[i->first] >= 0)
+        {
+            printPath(path, i->first, nodeA, i->first);
+        }
     }
 }
 
@@ -809,25 +798,31 @@ void printSolution(map<string, int> dist, map<string, string> path, string nodeA
 //    nodeB: A copy of the destination
 //
 //-----------------------------------------------------------------------------
+
 void printPath(map<string, string> path, string j, string nodeA, string nodeB)
 {
+    // If path[j] is src, return
     if (path[j] == nodeA)
     {
         forwardingTables[nodeA][nodeB] = j;
-        //cout << nodeA << " to " << nodeB << " through " << j << endl;
         return;
     }
 
+    // Recursively call printPath
     printPath(path, path[j], nodeA, nodeB);
-    // cout << "->" << j;
-    // solPath.push_back(j);
 }
+
+//-----------------------------------------------------------------------------
+//
+// void tempRoute
+//
+// Function to calculate a temporary route after shutdown
+//
+//-----------------------------------------------------------------------------
 
 void tempRoute()
 {
     // Case 1: Nodes
-
-
     // Edit forwarding table so that all paths to the dead node are shut down
     for(int i = 0; i < nodesToClose.size(); i++)
     {
@@ -865,7 +860,7 @@ void tempRoute()
             for(map<string, vector<string>>::iterator b = goalNodes.begin(); b != goalNodes.end(); b++)
             {
                 fastPath.clear();
-                findPaths(nodeList, neighbors[j], b->first, 0);
+                findPaths(nodeList, neighbors[j], b->first);
                 if(!fastPath.empty()){
                     for(int k = 0; k < b->second.size(); k++){
                         for(int j = 0; j < fastPath.size() - 1; j++){
@@ -917,7 +912,7 @@ void tempRoute()
             for(int j = 0; j < nodeAgoals.size(); j++)
             {
                 fastPath.clear();
-                findPaths(nodeList, nodeA, nodeAgoals[j], 0);
+                findPaths(nodeList, nodeA, nodeAgoals[j]);
 
                 if(!fastPath.empty()){
                     for(int k = 0; k < fastPath.size() - 1; k++){
@@ -935,7 +930,7 @@ void tempRoute()
             for(int j = 0; j < nodeBgoals.size(); j++)
             {
                 fastPath.clear();
-                findPaths(nodeList, nodeB, nodeBgoals[j], 0);
+                findPaths(nodeList, nodeB, nodeBgoals[j]);
 
                 if(!fastPath.empty()){
                     for(int k = 0; k < fastPath.size() - 1; k++){
@@ -954,41 +949,95 @@ void tempRoute()
     }
 }
 
+//-----------------------------------------------------------------------------
+//
+// bool impossiblePathA
+//
+// Function to recursively determine if the path is impossible
+//
+// inputs:
+//    startNode: A copy of the start node
+//    endNode: A copy of the end node
+//    brokenNode: A copy of the broke node
+//
+//-----------------------------------------------------------------------------
+
 bool impossiblePathA(string startNode, string endNode, string brokenNode)
 {
+    // Checks for impossible nodes
     if(startNode == brokenNode){return true;}
     if(nodeList[startNode]->seeTable(endNode) == ""){return true;}
     if(startNode == endNode){return false;}
+
     return impossiblePathA(nodeList[startNode]->seeTable(endNode), endNode, brokenNode);
 }
 
+//-----------------------------------------------------------------------------
+//
+// bool impossiblePathB
+//
+// Function to recursively determine if the path crosses the link
+//
+// inputs:
+//    startNode: A copy of the start node
+//    endNode: A copy of the end node
+//    brokenNodeA: A copy of the broken node A
+//    brokenNodeB: A copy of the broken node B
+//
+//-----------------------------------------------------------------------------
 bool impossiblePathB(string startNode, string endNode, string brokenNodeA, string brokenNodeB)
 {
+    // Checks for impossible links
     if(startNode == brokenNodeA && nodeList[startNode]->seeTable(endNode) == brokenNodeB){return true;}
     if(startNode == brokenNodeB && nodeList[startNode]->seeTable(endNode) == brokenNodeA){return true;}
     if(nodeList[startNode]->seeTable(endNode) == ""){return true;}
     if(startNode == endNode){return false;}
+
     return impossiblePathB(nodeList[startNode]->seeTable(endNode), endNode, brokenNodeA, brokenNodeB);
 }
 
+
+//-----------------------------------------------------------------------------
+//
+// void printBFSPath
+//
+// Function to print the BFS path
+//
+// inputs:
+//    path: A copy BFS path vector
+//
+//-----------------------------------------------------------------------------
+
 void printBFSPath(vector<string> path)
 {
+    // Initialize fastPath vector with BFS path
     int size = path.size();
     for (int i = 0; i < size; i++)
     {
-        //cout << path[i] << " ";
         fastPath.push_back(path[i]);
     }
-
-    //cout << endl;
 }
 
-void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int nodes)
+//-----------------------------------------------------------------------------
+//
+// void findPaths
+//
+// Iterates through the nodes and links of nodeList using BFS algorithm
+//
+// inputs:
+//    nodeList: A copy of the entire nodeList
+//    nodeA: Name of the source node
+//    nodeB: Name of the destination node
+//
+//-----------------------------------------------------------------------------
+
+void findPaths(map<string, node*> nodeList, string nodeA, string nodeB)
 {
     // create a queue which stores
     // the paths
     queue<vector<string> > q;
     vector<string> path;
+
     // path vector to store the current path
     if(nodeList[nodeA]->getStatus())
     {
@@ -998,7 +1047,6 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
 
     while (!q.empty())
     {
-        //cout << q.size() << endl;
         path = q.front();
         q.pop();
         string last = path[path.size() - 1];
@@ -1035,12 +1083,24 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB, int node
     }
 }
 
+//-----------------------------------------------------------------------------
+//
+// void isNotVisited
+//
+// Function to keep track of nodes that have been visited
+//
+// inputs:
+//    x: A copy of the string to be searched for in the path vector 
+//    path: A copy of the path vector
+//
+//-----------------------------------------------------------------------------
+
 int isNotVisited(string x, vector<string> path)
 {
+    // Iterate through path to find and determine if x(node) exists in the path vector
     for(int i = 0; i < path.size(); i++)
     {
         if(std::find(path.begin(), path.end(), x) != path.end())
-        //if(nodeList.find(x) == nodeList.end())
         {
             return 0;
         }
