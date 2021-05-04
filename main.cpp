@@ -52,7 +52,7 @@ void tempRoute();
 bool impossiblePathA(string startNode, string endNode, string brokenNode);
 bool impossiblePathB(string startNode, string endNode, string brokenNodeA, string brokenNodeB);
 
-// DFS Algorithm
+// BFS Algorithm
 void printBFSPath(vector<string> path);
 void findPaths(map<string, node*> nodeList, string nodeA, string nodeB);
 int isNotVisited(string x, vector<string> path);
