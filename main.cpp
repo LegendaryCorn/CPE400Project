@@ -134,7 +134,7 @@ void iterationLoop(char* fileName)
 	string parameters = "";
 	time_t start = time(NULL); //set start to current time
 	time_t current;
-	double stepSize = 30;
+	double stepSize = 10;
 	double step = stepSize;
     srand(time(0));
     bool firstTime = true;
@@ -186,38 +186,40 @@ void iterationLoop(char* fileName)
                 }
             }
             firstTime = false;
+            step = difftime(time(&current), start) + stepSize;
 		}
 
         // Every x seconds, try to shut down nodes and links
-        /*
-        if(difftime(current, start) > step){
+        if(difftime(time(&current), start) > step){
             step += stepSize;
 
 
 
             for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
             {
-                if(a->second->getStatus() && rand() % 50 == 0){
-                    //nodesToClose.push_back(a->first);
-                    //cout << a->first << endl;
+                if(a->second->getStatus() && rand() % 20 == 0){
+                    nodesToClose.push_back(a->first);
+                    cout << "Node " << a->first << " has been shut down." << endl;
                 }
-                else if(!a->second->getStatus() && rand() % 4 == 0){
-                    //a->second->flipStatus();
+                else if(!a->second->getStatus() && rand() % 4 > 0){
+                    a->second->flipStatus();
+                    cout << "Node " << a->first << " has been repaired." << endl;
                 }
             }
 
             for(int b = 0; b < linkList.size(); b++)
             {
-                if(linkList[b]->getStatus() && rand() % 50 == 0){
-                   //linksToClose.push_back(linkList[b]->getBothNodes());
-                   //cout << linkList[b]->getBothNodes() << endl;
+                if(linkList[b]->getStatus() && rand() % 20 == 0){
+                   linksToClose.push_back(linkList[b]->getBothNodes());
+                   cout << "Link " << linkList[b]->getBothNodes() << " has been shut down." << endl;
                 }
-                else if(!linkList[b]->getStatus() && rand() % 4 == 0){
-                    //linkList[b]->flipStatus();
+                else if(!linkList[b]->getStatus() && rand() % 4 > 0){
+                    linkList[b]->flipStatus();
+                    cout << "Link " << linkList[b]->getBothNodes() << " has been repaired." << endl;
                 }
             }
         }
-        */
+
 
         // Main run
         dRun = false;
@@ -250,7 +252,7 @@ void iterationLoop(char* fileName)
 
             nodesToClose.clear();
             linksToClose.clear();
-            //step = difftime(current, start) + stepSize;
+            step = difftime(time(&current), start) + stepSize;
             for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
             {
                 a->second->clearTable();
@@ -616,6 +618,11 @@ bool findRoute(string parameters)
 		return false;
 	}
 
+    if(!nodeList[nodeA]->getStatus())
+    {
+		cout << "The first node is currently inactive." << endl;
+		return false;
+    }
     // Call recursiveRoute to print out strings
     recursiveRoute(nodeA, nodeB);
 
