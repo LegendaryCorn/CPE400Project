@@ -49,8 +49,7 @@ string minDistance(map<string, int> dist, map<string, bool> set);
 
 // Temporary Route
 void tempRoute();
-bool impossiblePathA(string startNode, string endNode, string brokenNode);
-bool impossiblePathB(string startNode, string endNode, string brokenNodeA, string brokenNodeB);
+bool impossiblePath(string startNode, string endNode);
 
 // BFS Algorithm
 void printBFSPath(vector<string> path);
@@ -135,8 +134,8 @@ void iterationLoop(char* fileName)
 	string parameters = "";
 	time_t start = time(NULL); //set start to current time
 	time_t current;
-    double step = 0;
-	double stepSize = 4;
+	double stepSize = 30;
+	double step = stepSize;
     srand(time(0));
     bool firstTime = true;
 
@@ -189,6 +188,38 @@ void iterationLoop(char* fileName)
             firstTime = false;
 		}
 
+        // Every x seconds, try to shut down nodes and links
+        /*
+        if(difftime(current, start) > step){
+            step += stepSize;
+
+
+
+            for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
+            {
+                if(a->second->getStatus() && rand() % 50 == 0){
+                    //nodesToClose.push_back(a->first);
+                    //cout << a->first << endl;
+                }
+                else if(!a->second->getStatus() && rand() % 4 == 0){
+                    //a->second->flipStatus();
+                }
+            }
+
+            for(int b = 0; b < linkList.size(); b++)
+            {
+                if(linkList[b]->getStatus() && rand() % 50 == 0){
+                   //linksToClose.push_back(linkList[b]->getBothNodes());
+                   //cout << linkList[b]->getBothNodes() << endl;
+                }
+                else if(!linkList[b]->getStatus() && rand() % 4 == 0){
+                    //linkList[b]->flipStatus();
+                }
+            }
+        }
+        */
+
+        // Main run
         dRun = false;
 		for(int i = 0; i < nodesToClose.size(); i++)
         {
@@ -219,6 +250,7 @@ void iterationLoop(char* fileName)
 
             nodesToClose.clear();
             linksToClose.clear();
+            //step = difftime(current, start) + stepSize;
             for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
             {
                 a->second->clearTable();
@@ -502,6 +534,7 @@ bool seeLinks()
 
 bool flipNode(string parameter)
 {
+
     // Initialize by parsing parameter
     parameter = parameter.substr(0,parameter.find(" ",0));
 
@@ -516,6 +549,7 @@ bool flipNode(string parameter)
         cout << "Node flipped." << endl;
         return true;
     }
+    return true;
 
 }
 
@@ -600,7 +634,7 @@ bool findRoute(string parameters)
 //-----------------------------------------------------------------------------
 bool dtest(string parameters)
 {
-    // Iterate through nodeList 
+    // Iterate through nodeList
     for(map<string,node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
     {
         // "Delay" function to simulate long calculation times
@@ -649,7 +683,7 @@ bool stopLoop()
 //-----------------------------------------------------------------------------
 string recursiveRoute(string nodeA, string nodeB)
 {
-    // If src is dst, return 
+    // If src is dst, return
     if(nodeA == nodeB)
     {
         cout << nodeB << endl;
@@ -773,7 +807,7 @@ string minDistance(map<string, int> dist, map<string, bool> set)
 
 void printSolution(map<string, int> dist, map<string, string> path, string nodeA, string nodeB)
 {
-    // Iterate through dist map 
+    // Iterate through dist map
     for(map<string, int>::iterator i = dist.begin(); i != dist.end(); i++)
     {
         // Start printPath recursive call to print Dijkstra's calculations
@@ -822,8 +856,12 @@ void printPath(map<string, string> path, string j, string nodeA, string nodeB)
 
 void tempRoute()
 {
-    // Case 1: Nodes
-    // Edit forwarding table so that all paths to the dead node are shut down
+    vector<string> pathToFix1; // Start node
+    vector<string> pathToFix2; // End node
+    vector<string> pathToFix3; // Forwarding Table Node
+
+    // Get rid of shut down node paths; we know these don't work
+
     for(int i = 0; i < nodesToClose.size(); i++)
     {
         for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
@@ -832,121 +870,38 @@ void tempRoute()
         }
     }
 
-    for(int i = 0; i < nodesToClose.size(); i++)
-    {
-        // Find neighbors
-        vector<string> neighbors;
-        for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
-        {
-            int test = nodeList[nodesToClose[i]]->getLinkStatus(a->first);
-            if((test >= 0 || test == -2) && a->second->getStatus())
-            {
-                neighbors.push_back(a->first);
-            }
-        }
+    // Now to check each path if its possible
+    for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++){
+        for(map<string, node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
 
-        for(int j = 0; j < neighbors.size(); j++)
-        {
-            // Get goal nodes
-            map<string, vector<string>> goalNodes;
-            for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
-            {
-                if(nodeList[neighbors[j]]->seeTable(a->first) == nodesToClose[i])
-                {
-                    goalNodes[nodeList[nodesToClose[i]]->seeTable(a->first)].push_back(a->first);
-                }
-            }
-
-            for(map<string, vector<string>>::iterator b = goalNodes.begin(); b != goalNodes.end(); b++)
-            {
-                fastPath.clear();
-                findPaths(nodeList, neighbors[j], b->first);
-                if(!fastPath.empty()){
-                    for(int k = 0; k < b->second.size(); k++){
-                        for(int j = 0; j < fastPath.size() - 1; j++){
-                            nodeList[fastPath[j]]->editTable(b->second[k], fastPath[j+1]);
-                        }
+            // Skip inactive nodes because we don't care about them
+            if(a->second->getStatus() && b->second->getStatus()){
+                // If it isn't possible, check for alt route. If it is, just ignore it.
+                if(impossiblePath(a->first, b->first)){
+                    fastPath.clear();
+                    findPaths(nodeList, a->first, b->first);
+                    if(!fastPath.empty()){
+                        pathToFix1.push_back(a->first);
+                        pathToFix2.push_back(b->first);
+                        pathToFix3.push_back(fastPath[1]);
                     }
-                }
-                else{
-                    for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
-                    {
-                        for(int k = 0; k < b->second.size(); k++){
-                            if(impossiblePathA(a->first, b->second[k], nodesToClose[i])){
-                                a->second->editTable(b->second[k], "");
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-    }
-
-    // Case 2: Links
-    for(int i = 0; i < linksToClose.size(); i++)
-    {
-        // Parse
-        size_t firstSpace = linksToClose[i].find(" ",0);
-        size_t secondSpace = linksToClose[i].find(" ",firstSpace+1);
-
-        string nodeA = linksToClose[i].substr(0,firstSpace);
-        string nodeB = linksToClose[i].substr(firstSpace+1,secondSpace-firstSpace-1);
-
-        // Check if both nodes are active
-        if(nodeList[nodeA]->getStatus() && nodeList[nodeB]->getStatus())
-        {
-            // Check for paths that both nodes use
-            vector<string> nodeAgoals;
-            vector<string> nodeBgoals;
-            for(map<string, node*>::iterator a = nodeList.begin(); a != nodeList.end(); a++)
-            {
-                if(nodeList[nodeA]->seeTable(a->first) == nodeB){
-                    nodeAgoals.push_back(a->first);
-                }
-                if(nodeList[nodeB]->seeTable(a->first) == nodeA){
-                    nodeBgoals.push_back(a->first);
-                }
-            }
-
-            for(int j = 0; j < nodeAgoals.size(); j++)
-            {
-                fastPath.clear();
-                findPaths(nodeList, nodeA, nodeAgoals[j]);
-
-                if(!fastPath.empty()){
-                    for(int k = 0; k < fastPath.size() - 1; k++){
-                        nodeList[fastPath[k]]->editTable(nodeAgoals[j], fastPath[k+1]);
-                    }
-                }
-                else{
-                    for(map<string, node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
-                        if(impossiblePathB(b->first, nodeAgoals[j], nodeA, nodeB)){
-                            b->second->editTable(nodeAgoals[j], "");
-                        }
-                    }
-                }
-            }
-            for(int j = 0; j < nodeBgoals.size(); j++)
-            {
-                fastPath.clear();
-                findPaths(nodeList, nodeB, nodeBgoals[j]);
-
-                if(!fastPath.empty()){
-                    for(int k = 0; k < fastPath.size() - 1; k++){
-                        nodeList[fastPath[k]]->editTable(nodeBgoals[j], fastPath[k+1]);
-                    }
-                }
-                else{
-                    for(map<string, node*>::iterator b = nodeList.begin(); b != nodeList.end(); b++){
-                        if(impossiblePathB(b->first, nodeBgoals[j], nodeA, nodeB)){
-                            b->second->editTable(nodeBgoals[j], "");
-                        }
+                    else{
+                        pathToFix1.push_back(a->first);
+                        pathToFix2.push_back(b->first);
+                        pathToFix3.push_back("");
                     }
                 }
             }
         }
     }
+
+    // Now that this is over, fix the paths
+
+    for(int x = 0; x < pathToFix1.size(); x++)
+    {
+        nodeList[pathToFix1[x]]->editTable(pathToFix2[x], pathToFix3[x]);
+    }
+
 }
 
 //-----------------------------------------------------------------------------
@@ -962,40 +917,13 @@ void tempRoute()
 //
 //-----------------------------------------------------------------------------
 
-bool impossiblePathA(string startNode, string endNode, string brokenNode)
+bool impossiblePath(string startNode, string endNode)
 {
-    // Checks for impossible nodes
-    if(startNode == brokenNode){return true;}
-    if(nodeList[startNode]->seeTable(endNode) == ""){return true;}
+    if(!nodeList[startNode]->getStatus()){return true;}
     if(startNode == endNode){return false;}
-
-    return impossiblePathA(nodeList[startNode]->seeTable(endNode), endNode, brokenNode);
+    if(nodeList[startNode]->getLinkStatus(nodeList[startNode]->seeTable(endNode)) < 0){return true;}
+    return impossiblePath(nodeList[startNode]->seeTable(endNode), endNode);
 }
-
-//-----------------------------------------------------------------------------
-//
-// bool impossiblePathB
-//
-// Function to recursively determine if the path crosses the link
-//
-// inputs:
-//    startNode: A copy of the start node
-//    endNode: A copy of the end node
-//    brokenNodeA: A copy of the broken node A
-//    brokenNodeB: A copy of the broken node B
-//
-//-----------------------------------------------------------------------------
-bool impossiblePathB(string startNode, string endNode, string brokenNodeA, string brokenNodeB)
-{
-    // Checks for impossible links
-    if(startNode == brokenNodeA && nodeList[startNode]->seeTable(endNode) == brokenNodeB){return true;}
-    if(startNode == brokenNodeB && nodeList[startNode]->seeTable(endNode) == brokenNodeA){return true;}
-    if(nodeList[startNode]->seeTable(endNode) == ""){return true;}
-    if(startNode == endNode){return false;}
-
-    return impossiblePathB(nodeList[startNode]->seeTable(endNode), endNode, brokenNodeA, brokenNodeB);
-}
-
 
 //-----------------------------------------------------------------------------
 //
@@ -1090,7 +1018,7 @@ void findPaths(map<string, node*> nodeList, string nodeA, string nodeB)
 // Function to keep track of nodes that have been visited
 //
 // inputs:
-//    x: A copy of the string to be searched for in the path vector 
+//    x: A copy of the string to be searched for in the path vector
 //    path: A copy of the path vector
 //
 //-----------------------------------------------------------------------------

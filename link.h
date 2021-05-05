@@ -22,6 +22,7 @@ class link
         void linkFailureChance();
         bool getStatus();
         bool flipStatus();
+        string getBothNodes();
 
     private:
         string node1;
@@ -84,6 +85,11 @@ void link::linkFailureChance()
         status = !status;
         cout << node1 << " " << node2 << " " << status << endl;
     }
+}
+
+string link::getBothNodes()
+{
+    return node1 + " " + node2;
 }
 
 #endif
