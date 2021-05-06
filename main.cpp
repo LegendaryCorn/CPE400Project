@@ -296,7 +296,7 @@ void inputLoop()
         cout << "\t-seelinks\t\t\t\t\t|\n|";
         cout << "\t-flipnode <node>\t\t\t\t|\n|";
         cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
-        cout << "\t-fixnode <node>\t\t\t\t|\n|";
+        cout << "\t-fixnode <node>\t\t\t\t\t|\n|";
         cout << "\t-fixlink <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-findroute <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-stop\t\t\t\t\t\t|" << endl;
