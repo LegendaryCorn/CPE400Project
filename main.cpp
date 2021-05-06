@@ -32,8 +32,8 @@ bool createNode(string parameter);
 bool createLink(string parameters);
 bool seeNodes();
 bool seeLinks();
-bool flipNode(string parameter);
-bool flipLink(string parameters);
+bool flipNode(string parameter, bool onOff);
+bool flipLink(string parameters, bool onOff);
 bool findRoute(string parameters);
 bool dtest(string parameters);
 bool stopLoop();
@@ -71,6 +71,7 @@ bool dRun = false; // Determines if dijkstra's is running
 bool fRun = false; // Determines if the fast algorithm needs to run
 map<string,map<string,string>> forwardingTables; // The forwarding table, only accessed by IterationLoop
 vector<string> fastPath; // Vector that stores the fast path
+bool create = true; // Determines whether the algorithm should use the create commands
 
 int main(int argc, char *argv[])
 {
@@ -134,7 +135,7 @@ void iterationLoop(char* fileName)
 	string parameters = "";
 	time_t start = time(NULL); //set start to current time
 	time_t current;
-	double stepSize = 10;
+	double stepSize = 30;
 	double step = stepSize;
     srand(time(0));
     bool firstTime = true;
@@ -168,6 +169,7 @@ void iterationLoop(char* fileName)
 		}
 
         mtx.lock();
+        create = false;
 
 		if(firstTime)
         {
@@ -290,12 +292,12 @@ void inputLoop()
         //----------------------------
         cout << endl <<  "-----------------------Commands-------------------------" << endl;
         cout << "| Options:\t\t\t\t\t\t|\n|" ;
-        cout << "\t-createnode <nodeA>\t\t\t\t|\n|";
-        cout << "\t-createlink <nodeA> <nodeB> <dist>\t\t|\n|";
         cout << "\t-seenodes\t\t\t\t\t|\n|";
         cout << "\t-seelinks\t\t\t\t\t|\n|";
         cout << "\t-flipnode <node>\t\t\t\t|\n|";
         cout << "\t-fliplink <nodeA> <nodeB>\t\t\t|\n|";
+        cout << "\t-fixnode <node>\t\t\t\t|\n|";
+        cout << "\t-fixlink <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-findroute <nodeA> <nodeB>\t\t\t|\n|";
         cout << "\t-stop\t\t\t\t\t\t|" << endl;
         cout << "--------------------------------------------------------" << endl;
@@ -363,11 +365,11 @@ void fastLoop()
 
 bool handleCommand(string command, string parameters) //If someone has a better way to do this lmk
 {
-    if(command == "createnode" && !dRun)
+    if(command == "createnode" && !dRun && create)
     {
         return createNode(parameters);
     }
-    if(command == "createlink" && !dRun)
+    if(command == "createlink" && !dRun && create)
     {
         return createLink(parameters);
     }
@@ -381,11 +383,19 @@ bool handleCommand(string command, string parameters) //If someone has a better 
     }
     if(command == "flipnode" && !dRun)
     {
-        return flipNode(parameters);
+        return flipNode(parameters, false);
     }
     if(command == "fliplink" && !dRun)
     {
-        return flipLink(parameters);
+        return flipLink(parameters, false);
+    }
+    if(command == "fixnode" && !dRun)
+    {
+        return flipNode(parameters, true);
+    }
+    if(command == "fixlink" && !dRun)
+    {
+        return flipLink(parameters, true);
     }
     if(command == "findroute")
     {
@@ -534,7 +544,7 @@ bool seeLinks()
 //
 //-----------------------------------------------------------------------------
 
-bool flipNode(string parameter)
+bool flipNode(string parameter, bool onOff)
 {
 
     // Initialize by parsing parameter
@@ -547,11 +557,20 @@ bool flipNode(string parameter)
     }
     else
     {
-        nodesToClose.push_back(parameter);
-        cout << "Node flipped." << endl;
-        return true;
+        if(!onOff && nodeList[parameter]->getStatus()){
+            nodesToClose.push_back(parameter);
+            cout << "Node shut down." << endl;
+            return true;
+        }
+        if(onOff && !nodeList[parameter]->getStatus()){
+            nodeList[parameter]->flipStatus();
+            cout << "Node repaired." << endl;
+            return true;
+        }
     }
-    return true;
+
+    cout << "Invalid node." << endl;
+    return false;
 
 }
 
@@ -566,7 +585,7 @@ bool flipNode(string parameter)
 //
 //-----------------------------------------------------------------------------
 
-bool flipLink(string parameters)
+bool flipLink(string parameters, bool onOff)
 {
     // Initialize by parsing parameters
     size_t firstSpace = parameters.find(" ",0);
@@ -584,9 +603,20 @@ bool flipLink(string parameters)
     //Flip link if found
 	if((nodeList[nodeA]->getLinkStatus(nodeB) != -1))
 	{
-        linksToClose.push_back(parameters);
-        cout << "Link flipped." << endl;
-		return true;
+	    if(!onOff && nodeList[nodeA]->getLinkStatus(nodeB) != -2){
+            linksToClose.push_back(parameters);
+            cout << "Link shut down." << endl;
+            return true;
+	    }
+        if(onOff && nodeList[nodeA]->getLinkStatus(nodeB) == -2){
+            nodeList[nodeA]->flipLinkStatus(nodeB);
+            cout << "Link repaired." << endl;
+            return true;
+	    }
+	    else{
+            cout << "Invalid link." << endl;
+            return false;
+	    }
 	}
     cout << "Link doesn't exist." << endl;
 	return false;
@@ -646,7 +676,7 @@ bool dtest(string parameters)
     {
         // "Delay" function to simulate long calculation times
         std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
-        std::uniform_int_distribution<> dist{1, 2};
+        std::uniform_int_distribution<> dist{2, 4};
         std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
 
         // Call for and calculate Dijkstra's Alg
